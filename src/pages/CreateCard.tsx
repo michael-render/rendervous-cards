@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, LayoutGrid } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import QuestionStep from '@/components/QuestionStep';
 import { CardAnswers } from '@/lib/types';
 import rendyThumbsUp from '@/assets/rendy-thumbs-up.png';
@@ -61,16 +60,6 @@ const CreateCard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" onKeyDown={handleKeyDown}>
-      {/* Gallery link */}
-      <div className="absolute top-4 right-4 z-20">
-        <Link
-          to="/gallery"
-          className="inline-flex items-center gap-1.5 font-display text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LayoutGrid className="w-4 h-4" /> Gallery
-        </Link>
-      </div>
-
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-10 right-20 w-48 h-48 rounded-full bg-peach-light/30 blur-3xl" />
