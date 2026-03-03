@@ -28,6 +28,14 @@ export interface TransformedCard {
   theme: CardTheme;
 }
 
+export interface GalleryCard {
+  id: string;
+  name: string;
+  archetype_title: string;
+  theme: CardTheme;
+  created_at: string;
+}
+
 export type CardTheme = 'coral' | 'mint' | 'sky' | 'lavender' | 'peach';
 
 export const CARD_THEMES: CardTheme[] = ['coral', 'mint', 'sky', 'lavender', 'peach'];

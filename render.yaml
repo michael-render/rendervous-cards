@@ -1,0 +1,46 @@
+databases:
+  - name: rendervous-cards-db
+    plan: basic-256mb
+    databaseName: rendervous_cards
+    user: rendervous
+
+services:
+  - type: web
+    name: rendervous-cards-api
+    runtime: node
+    plan: starter
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rendervous-cards-db
+          property: connectionString
+      - key: CARD_STORAGE_PATH
+        value: /var/data/cards
+      - key: FRONTEND_URL
+        value: https://rendervous-cards.onrender.com
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: card-storage
+      mountPath: /var/data/cards
+      sizeGB: 1
+
+  - type: web
+    name: rendervous-cards
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://rendervous-cards-api.onrender.com
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
