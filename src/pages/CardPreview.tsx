@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { RefreshCw, ArrowLeft, Save, Check, Loader2 } from 'lucide-react';
@@ -45,6 +45,12 @@ const CardPreview = () => {
       toast.error('Failed to save card. Please try again.');
     },
   });
+
+  // Reset save state when card changes so user can save new variants
+  useEffect(() => {
+    saveMutation.reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [themeIndex]);
 
   const handleSave = useCallback(() => {
     if (!saveMutation.isPending) {

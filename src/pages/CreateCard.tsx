@@ -9,7 +9,7 @@ import rendyThumbsUp from '@/assets/rendy-thumbs-up.png';
 const QUESTIONS = [
   { key: 'name', question: "What's your name?", placeholder: 'e.g. Alex Chen' },
   { key: 'role', question: "What's your role at Render?", subtitle: "(Used to generate your card's character title — not shown verbatim)", placeholder: 'e.g. Product Designer' },
-  { key: 'photoUrl', question: "Upload a photo of yourself", subtitle: "This will be used as your card illustration", placeholder: '', isPhotoUpload: true },
+  { key: 'photoUrl', question: "Upload a photo of yourself", subtitle: "This will be used as your card illustration (optional)", placeholder: '', isPhotoUpload: true, optional: true },
   { key: 'hobby', question: "What do you like to do outside of work?", placeholder: 'e.g. I bake elaborate cakes' },
   { key: 'unpopularOpinion', question: "What's your most #unpopular-opinion?", placeholder: 'e.g. Pizza is overrated' },
   { key: 'workHack', question: "What's a work hack you swear by?", placeholder: 'e.g. Color-coded calendar blocks' },
@@ -27,7 +27,8 @@ const CreateCard = () => {
   const current = QUESTIONS[step];
   const value = answers[current.key] || '';
   const isLast = step === QUESTIONS.length - 1;
-  const canProceed = value.trim().length > 0;
+  const isOptional = 'optional' in current && (current as any).optional;
+  const canProceed = isOptional || value.trim().length > 0;
 
   const handleChange = useCallback((val: string) => {
     setAnswers(prev => ({ ...prev, [current.key]: val }));

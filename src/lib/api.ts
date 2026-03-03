@@ -30,7 +30,10 @@ export function imageUrl(id: string): string {
   return `${API_URL}/api/cards/${id}/image`;
 }
 
-export async function deleteCard(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/api/cards/${id}`, { method: 'DELETE' });
+export async function deleteCard(id: string, adminToken: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/cards/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
   if (!res.ok) throw new Error('Failed to delete card');
 }

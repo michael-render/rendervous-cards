@@ -3,22 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Plus, Download, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import rendyTemplate from '@/assets/rendy-template.png';
 import { fetchCards, thumbnailUrl, imageUrl } from '@/lib/api';
-import { GalleryCard } from '@/lib/types';
-
-const THEME_BORDER: Record<string, string> = {
-  coral: 'border-coral',
-  mint: 'border-mint',
-  sky: 'border-sky',
-  lavender: 'border-lavender',
-  peach: 'border-peach',
-};
+import { GalleryCard, THEME_BORDERS } from '@/lib/types';
 
 const Gallery = () => {
   const [selected, setSelected] = useState<GalleryCard | null>(null);
 
-  const { data: cards, isLoading } = useQuery<GalleryCard[]>({
+  const { data: cards, isLoading, isError } = useQuery<GalleryCard[]>({
     queryKey: ['gallery-cards'],
     queryFn: fetchCards,
   });
@@ -26,14 +19,19 @@ const Gallery = () => {
   const hasCards = cards && cards.length > 0;
 
   const handleDownload = async (card: GalleryCard) => {
-    const res = await fetch(imageUrl(card.id));
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${card.name}-card.png`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const res = await fetch(imageUrl(card.id));
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${card.name}-card.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download card image.');
+    }
   };
 
   return (
@@ -55,6 +53,11 @@ const Gallery = () => {
               <div key={i} className="aspect-[3/4] rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="font-display text-xl text-muted-foreground mb-2">Could not load cards</p>
+            <p className="font-body text-sm text-muted-foreground">Please check your connection and try again.</p>
+          </div>
         ) : hasCards ? (
           <motion.div
             initial={{ opacity: 0 }}
@@ -67,8 +70,8 @@ const Gallery = () => {
                 onClick={() => setSelected(card)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className={`group relative aspect-[3/4] rounded-lg overflow-hidden border-[3px] ${THEME_BORDER[card.theme] || 'border-card-border'} shadow-sm hover:shadow-lg transition-all hover:scale-[1.05] cursor-pointer`}
+                transition={{ delay: Math.min(i * 0.03, 0.5) }}
+                className={`group relative aspect-[3/4] rounded-lg overflow-hidden border-[3px] ${THEME_BORDERS[card.theme] || 'border-card-border'} shadow-sm hover:shadow-lg transition-all hover:scale-[1.05] cursor-pointer`}
               >
                 <img
                   src={thumbnailUrl(card.id)}
@@ -128,7 +131,7 @@ const Gallery = () => {
                 <X className="w-4 h-4" />
               </button>
 
-              <div className={`rounded-xl overflow-hidden border-4 ${THEME_BORDER[selected.theme] || 'border-card-border'} shadow-2xl`}>
+              <div className={`rounded-xl overflow-hidden border-4 ${THEME_BORDERS[selected.theme] || 'border-card-border'} shadow-2xl`}>
                 <img
                   src={imageUrl(selected.id)}
                   alt={`${selected.name}'s card`}

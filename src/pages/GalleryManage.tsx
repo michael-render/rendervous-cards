@@ -5,27 +5,21 @@ import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fetchCards, thumbnailUrl, deleteCard } from '@/lib/api';
-import { GalleryCard } from '@/lib/types';
-
-const THEME_BORDER: Record<string, string> = {
-  coral: 'border-coral',
-  mint: 'border-mint',
-  sky: 'border-sky',
-  lavender: 'border-lavender',
-  peach: 'border-peach',
-};
+import { GalleryCard, THEME_BORDERS } from '@/lib/types';
 
 const GalleryManage = () => {
   const queryClient = useQueryClient();
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem('admin_token') || '');
+  const [showAuth, setShowAuth] = useState(!adminToken);
 
-  const { data: cards, isLoading } = useQuery<GalleryCard[]>({
+  const { data: cards, isLoading, isError } = useQuery<GalleryCard[]>({
     queryKey: ['gallery-cards'],
     queryFn: fetchCards,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteCard,
+    mutationFn: (id: string) => deleteCard(id, adminToken),
     onSuccess: (_data, id) => {
       queryClient.setQueryData<GalleryCard[]>(['gallery-cards'], (old) =>
         old ? old.filter((c) => c.id !== id) : []
@@ -34,11 +28,49 @@ const GalleryManage = () => {
       toast.success('Card deleted');
     },
     onError: () => {
-      toast.error('Failed to delete card');
+      toast.error('Failed to delete card. Check your admin token.');
     },
   });
 
   const hasCards = cards && cards.length > 0;
+
+  if (showAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center">
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Admin Access</h1>
+          <p className="font-body text-sm text-muted-foreground mb-6">Enter the admin token to manage cards.</p>
+          <input
+            type="password"
+            value={adminToken}
+            onChange={(e) => setAdminToken(e.target.value)}
+            placeholder="Admin token"
+            className="w-full rounded-lg border-2 border-card-border bg-card px-4 py-3 font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 mb-4"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && adminToken.trim()) {
+                sessionStorage.setItem('admin_token', adminToken.trim());
+                setShowAuth(false);
+              }
+            }}
+          />
+          <motion.button
+            onClick={() => {
+              if (adminToken.trim()) {
+                sessionStorage.setItem('admin_token', adminToken.trim());
+                setShowAuth(false);
+              }
+            }}
+            disabled={!adminToken.trim()}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="rounded-xl bg-primary px-6 py-2.5 font-display text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40"
+          >
+            Continue
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-12">
@@ -58,12 +90,17 @@ const GalleryManage = () => {
               <div key={i} className="aspect-[3/4] rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="font-display text-xl text-muted-foreground mb-2">Could not load cards</p>
+            <p className="font-body text-sm text-muted-foreground">Please check your connection and try again.</p>
+          </div>
         ) : hasCards ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {cards.map((card) => (
               <div
                 key={card.id}
-                className={`relative rounded-lg overflow-hidden border-[3px] ${THEME_BORDER[card.theme] || 'border-card-border'} shadow-sm`}
+                className={`relative rounded-lg overflow-hidden border-[3px] ${THEME_BORDERS[card.theme] || 'border-card-border'} shadow-sm`}
               >
                 <div className="aspect-[3/4]">
                   <img
