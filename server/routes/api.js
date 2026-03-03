@@ -6,6 +6,26 @@ import pool from '../db.js';
 
 const router = Router();
 const STORAGE = process.env.CARD_STORAGE_PATH || './card-storage';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Validate :id is a UUID before any path construction
+function validateId(req, res, next) {
+  if (!UUID_RE.test(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid card ID' });
+  }
+  next();
+}
+
+// Admin auth for destructive operations
+function requireAdmin(req, res, next) {
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) return res.status(503).json({ error: 'Admin access not configured' });
+  const auth = req.headers.authorization;
+  if (auth !== `Bearer ${token}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
 
 // Health check
 router.get('/health', async (_req, res) => {
@@ -26,6 +46,9 @@ router.post('/cards', async (req, res) => {
       return res.status(400).json({ error: 'Missing card, answers, or image' });
     }
 
+    // Strip photoUrl from answers to avoid storing large base64 in DB
+    const { photoUrl, ...answersWithoutPhoto } = answers;
+
     const result = await pool.query(
       `INSERT INTO cards (name, archetype_title, special_ability, side_quest, signature_move, power_source, inventory_items, theme, answers)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -39,14 +62,14 @@ router.post('/cards', async (req, res) => {
         card.powerSource,
         JSON.stringify(card.inventoryItems),
         card.theme,
-        JSON.stringify(answers),
+        JSON.stringify(answersWithoutPhoto),
       ]
     );
 
     const { id, created_at } = result.rows[0];
 
     // Decode base64 image and save full + thumbnail
-    const base64Data = image.replace(/^data:image\/png;base64,/, '');
+    const base64Data = image.replace(/^data:image\/[^;]+;base64,/, '');
     const imgBuffer = Buffer.from(base64Data, 'base64');
 
     const cardDir = path.join(STORAGE, id);
@@ -67,12 +90,16 @@ router.post('/cards', async (req, res) => {
   }
 });
 
-// List all cards
-router.get('/cards', async (_req, res) => {
+// List cards (paginated)
+router.get('/cards', async (req, res) => {
   try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 200);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+
     const result = await pool.query(
       `SELECT id, name, archetype_title, theme, created_at
-       FROM cards ORDER BY created_at DESC`
+       FROM cards ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
     res.json(result.rows);
   } catch (err) {
@@ -82,7 +109,7 @@ router.get('/cards', async (_req, res) => {
 });
 
 // Get single card metadata
-router.get('/cards/:id', async (req, res) => {
+router.get('/cards/:id', validateId, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM cards WHERE id = $1`,
@@ -99,10 +126,11 @@ router.get('/cards/:id', async (req, res) => {
 });
 
 // Serve full card image
-router.get('/cards/:id/image', async (req, res) => {
+router.get('/cards/:id/image', validateId, async (req, res) => {
   try {
     const filePath = path.join(STORAGE, req.params.id, 'card.png');
     await fs.access(filePath);
+    res.set('Cache-Control', 'public, max-age=86400');
     res.type('image/png').sendFile(path.resolve(filePath));
   } catch {
     res.status(404).json({ error: 'Image not found' });
@@ -110,10 +138,12 @@ router.get('/cards/:id/image', async (req, res) => {
 });
 
 // Serve thumbnail (fallback to full image)
-router.get('/cards/:id/thumbnail', async (req, res) => {
+router.get('/cards/:id/thumbnail', validateId, async (req, res) => {
   try {
     const thumbPath = path.join(STORAGE, req.params.id, 'thumb.png');
     const fullPath = path.join(STORAGE, req.params.id, 'card.png');
+
+    res.set('Cache-Control', 'public, max-age=86400');
 
     try {
       await fs.access(thumbPath);
@@ -127,8 +157,8 @@ router.get('/cards/:id/thumbnail', async (req, res) => {
   }
 });
 
-// Delete a card
-router.delete('/cards/:id', async (req, res) => {
+// Delete a card (admin only)
+router.delete('/cards/:id', validateId, requireAdmin, async (req, res) => {
   try {
     const result = await pool.query(
       `DELETE FROM cards WHERE id = $1 RETURNING id`,

@@ -109,17 +109,6 @@ function generateSideQuest(opinion: string, seed: number): string {
   return matchOrDefaultSeeded(opinion, QUEST_PATTERNS, FALLBACK_QUESTS, seed);
 }
 
-// Fallback for side quest when no pattern matches and we have words
-function generateSideQuestFallback(opinion: string, seed: number): string {
-  const words = opinion.split(/\s+/).filter(w => w.length > 2);
-  if (words.length >= 2) {
-    const verbs = ['Eliminate All', 'Champion All', 'Enforce', 'Conquer', 'Overthrow', 'Reclaim'];
-    const verb = pickFromSeed(verbs, seed);
-    const subject = words.filter(w => !/^(is|are|the|a|an|my|i|it|be|to|of|in|on|so|do)$/i.test(w)).slice(0, 2).join(' ');
-    return `${verb} ${subject.charAt(0).toUpperCase() + subject.slice(1)}`;
-  }
-  return pickFromSeed(FALLBACK_QUESTS, seed);
-}
 
 function generateSignatureMove(hack: string, seed: number): string {
   return matchOrDefaultSeeded(hack, MOVE_PATTERNS, FALLBACK_MOVES, seed);
@@ -223,7 +212,7 @@ function itemToEmoji(item: string): string {
   for (const [regex, emoji] of ITEM_EMOJI_MAP) {
     if (regex.test(item)) return emoji;
   }
-  if (/^\p{Emoji}/u.test(item)) return item.charAt(0);
+  if (/^\p{Emoji}/u.test(item)) return Array.from(item)[0];
   return '✨';
 }
 

@@ -12,6 +12,7 @@ services:
     rootDir: server
     buildCommand: npm install
     startCommand: node server.js
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -23,6 +24,8 @@ services:
         value: https://rendervous-cards.onrender.com
       - key: NODE_ENV
         value: production
+      - key: ADMIN_TOKEN
+        sync: false
     disk:
       name: card-storage
       mountPath: /var/data/cards
