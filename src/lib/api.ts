@@ -29,3 +29,8 @@ export function thumbnailUrl(id: string): string {
 export function imageUrl(id: string): string {
   return `${API_URL}/api/cards/${id}/image`;
 }
+
+export async function deleteCard(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/cards/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete card');
+}

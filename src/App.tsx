@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import CreateCard from "./pages/CreateCard";
 import CardPreview from "./pages/CardPreview";
 import Gallery from "./pages/Gallery";
+import GalleryManage from "./pages/GalleryManage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/create" element={<CreateCard />} />
           <Route path="/preview" element={<CardPreview />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/gallery/manage" element={<GalleryManage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
