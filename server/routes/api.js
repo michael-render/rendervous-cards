@@ -7,6 +7,48 @@ import pool from '../db.js';
 const router = Router();
 const STORAGE = process.env.CARD_STORAGE_PATH || './card-storage';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const TASKS_BASE_URL = process.env.RENDER_TASKS_URL || 'https://api.render.com';
+
+async function writeThumbnail(imgBuffer, cardDir) {
+  await sharp(imgBuffer)
+    .resize(300)
+    .png({ quality: 80 })
+    .toFile(path.join(cardDir, 'thumb.png'));
+}
+
+async function triggerThumbnailTask(cardId) {
+  const apiKey = process.env.RENDER_API_KEY;
+  const taskSlug = process.env.WORKFLOW_TASK_GENERATE_THUMBNAIL;
+
+  if (!apiKey || !taskSlug || !globalThis.fetch) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${TASKS_BASE_URL}/v1/task-runs`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        task: taskSlug,
+        input: [cardId],
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error('Failed to start thumbnail workflow:', response.status, body);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Failed to start thumbnail workflow:', err);
+    return false;
+  }
+}
 
 // Validate :id is a UUID before any path construction
 function validateId(req, res, next) {
@@ -77,11 +119,11 @@ router.post('/cards', async (req, res) => {
 
     await fs.writeFile(path.join(cardDir, 'card.png'), imgBuffer);
 
-    // Generate 300px-wide thumbnail
-    await sharp(imgBuffer)
-      .resize(300)
-      .png({ quality: 80 })
-      .toFile(path.join(cardDir, 'thumb.png'));
+    const triggered = await triggerThumbnailTask(id);
+    if (!triggered) {
+      // Fallback to local thumbnail generation when workflows are not configured.
+      await writeThumbnail(imgBuffer, cardDir);
+    }
 
     res.status(201).json({ id, created_at });
   } catch (err) {
@@ -105,6 +147,28 @@ router.get('/cards', async (req, res) => {
   } catch (err) {
     console.error('GET /cards error:', err);
     res.status(500).json({ error: 'Failed to fetch cards' });
+  }
+});
+
+// Upload/update thumbnail (admin only, used by workflows)
+router.post('/cards/:id/thumbnail', validateId, requireAdmin, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'Missing image' });
+    }
+
+    const base64Data = image.replace(/^data:image\/[^;]+;base64,/, '');
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+
+    const cardDir = path.join(STORAGE, req.params.id);
+    await fs.mkdir(cardDir, { recursive: true });
+    await fs.writeFile(path.join(cardDir, 'thumb.png'), imgBuffer);
+
+    res.json({ updated: true });
+  } catch (err) {
+    console.error('POST /cards/:id/thumbnail error:', err);
+    res.status(500).json({ error: 'Failed to save thumbnail' });
   }
 });
 

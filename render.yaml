@@ -26,6 +26,10 @@ services:
         value: production
       - key: ADMIN_TOKEN
         sync: false
+      - key: RENDER_API_KEY
+        sync: false
+      - key: WORKFLOW_TASK_GENERATE_THUMBNAIL
+        sync: false
     disk:
       name: card-storage
       mountPath: /var/data/cards
