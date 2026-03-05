@@ -72,7 +72,7 @@ def _list_card_ids(limit=200):
         offset += limit
 
 
-@task
+@task()
 def generate_thumbnail(card_id: str):
     """Generate a thumbnail for a single card by fetching the full image via the API."""
     _require_env(API_BASE_URL, "API_BASE_URL")
@@ -84,7 +84,7 @@ def generate_thumbnail(card_id: str):
     return {"card_id": card_id, "status": "ok"}
 
 
-@task
+@task()
 def regenerate_all_thumbnails():
     """Rebuild thumbnails for every card using the API."""
     _require_env(API_BASE_URL, "API_BASE_URL")
