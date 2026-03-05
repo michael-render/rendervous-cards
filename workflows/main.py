@@ -72,15 +72,7 @@ def _list_card_ids(limit=200):
         offset += limit
 
 
-@task(
-    options={
-        "retry": {
-            "max_retries": 3,
-            "wait_duration_ms": 1000,
-            "factor": 2,
-        }
-    }
-)
+@task
 def generate_thumbnail(card_id: str):
     """Generate a thumbnail for a single card by fetching the full image via the API."""
     _require_env(API_BASE_URL, "API_BASE_URL")
