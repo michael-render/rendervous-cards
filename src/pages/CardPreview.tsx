@@ -41,7 +41,8 @@ const CardPreview = () => {
         },
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to save card:', error);
       toast.error('Failed to save card. Please try again.');
     },
   });
