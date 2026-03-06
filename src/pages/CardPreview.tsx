@@ -1,71 +1,30 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RefreshCw, ArrowLeft, Save, Check, Loader2 } from 'lucide-react';
-import { toPng } from 'html-to-image';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { RefreshCw, ArrowLeft } from 'lucide-react';
 import TradingCard from '@/components/TradingCard';
 import { transformAnswers } from '@/lib/cardTransforms';
 import { CardAnswers, CARD_THEMES } from '@/lib/types';
-import { saveCard } from '@/lib/api';
 
 const CardPreview = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const answers = location.state?.answers as CardAnswers | undefined;
   const [themeIndex, setThemeIndex] = useState(0);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const card = useMemo(() => {
     if (!answers) return null;
     return transformAnswers(answers, themeIndex % CARD_THEMES.length, themeIndex);
   }, [answers, themeIndex]);
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!cardRef.current || !card || !answers) throw new Error('No card to save');
-
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-      });
-
-      return saveCard(card, answers, dataUrl);
-    },
-    onSuccess: () => {
-      toast.success('Card saved to Gallery!', {
-        action: {
-          label: 'View Gallery',
-          onClick: () => navigate('/gallery'),
-        },
-      });
-    },
-    onError: () => {
-      toast.error('Failed to save card. Please try again.');
-    },
-  });
-
-  // Reset save state when card changes so user can save new variants
-  useEffect(() => {
-    saveMutation.reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeIndex]);
-
-  const handleSave = useCallback(() => {
-    if (!saveMutation.isPending) {
-      saveMutation.mutate();
-    }
-  }, [saveMutation]);
-
   if (!answers || !card) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="font-display text-xl text-muted-foreground mb-4">No card data found</p>
+          <p className="card-font-display text-xl text-muted-foreground mb-4">No card data found</p>
           <button
             onClick={() => navigate('/')}
-            className="font-display text-primary underline"
+            className="card-font-display text-primary underline"
           >
             Go back home
           </button>
@@ -76,10 +35,14 @@ const CardPreview = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
-      {/* Background */}
+      {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-1/4 w-56 h-56 rounded-full bg-coral-light/30 blur-3xl" />
-        <div className="absolute bottom-10 right-1/4 w-48 h-48 rounded-full bg-mint-light/30 blur-3xl" />
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(ellipse 100% 70% at 70% 90%, hsl(335 50% 25% / 0.4) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 50% at 30% 10%, hsl(255 45% 22% / 0.5) 0%, transparent 50%)
+          `,
+        }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -88,42 +51,32 @@ const CardPreview = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-6"
         >
-          <h1 className="font-display text-2xl font-bold text-foreground">Your Card is Ready! 🎉</h1>
+          <h1 className="card-font-display text-2xl font-bold text-foreground">Your Card is Ready! 🎉</h1>
         </motion.div>
 
-        <div ref={cardRef}>
-          <TradingCard card={card} answers={answers} />
-        </div>
+        <TradingCard card={card} answers={answers} />
 
-        <div className="flex justify-center gap-3 mt-8 flex-wrap">
+        <div className="flex justify-center gap-4 mt-8">
           <motion.button
             onClick={() => setThemeIndex(i => i + 1)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 font-display text-sm font-semibold text-accent-foreground shadow-md transition-all"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 card-font-display text-sm font-semibold text-white shadow-md transition-all"
+            style={{
+              background: 'linear-gradient(135deg, hsl(270 45% 40%), hsl(310 50% 45%))',
+            }}
           >
             <RefreshCw className="w-4 h-4" /> Regenerate
-          </motion.button>
-          <motion.button
-            onClick={handleSave}
-            disabled={saveMutation.isPending || saveMutation.isSuccess}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 font-display text-sm font-semibold text-primary-foreground shadow-md transition-all disabled:opacity-70"
-          >
-            {saveMutation.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-            ) : saveMutation.isSuccess ? (
-              <><Check className="w-4 h-4" /> Saved!</>
-            ) : (
-              <><Save className="w-4 h-4" /> Save to Gallery</>
-            )}
           </motion.button>
           <motion.button
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-card-border px-5 py-2.5 font-display text-sm font-semibold text-foreground transition-all"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 card-font-display text-sm font-semibold text-foreground transition-all"
+            style={{
+              border: '2px solid hsl(270 40% 35%)',
+              background: 'hsl(250 30% 15% / 0.5)',
+            }}
           >
             <ArrowLeft className="w-4 h-4" /> Start Over
           </motion.button>

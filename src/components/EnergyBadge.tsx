@@ -18,8 +18,8 @@ const EnergyBadge = ({ emojiInput }: EnergyBadgeProps) => {
     <motion.div
       className="w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-md animate-badge-wobble overflow-hidden"
       style={{
-        background: 'linear-gradient(145deg, hsl(var(--card-header-bg)), hsl(var(--card-border) / 0.35))',
-        border: '3px solid hsl(var(--card-border) / 0.6)',
+        background: 'linear-gradient(145deg, hsl(var(--card-bg-via)), hsl(var(--card-bg-to) / 0.6))',
+        border: '2px solid hsl(var(--card-glow) / 0.45)',
         transform: 'rotate(-6deg)',
       }}
     >
