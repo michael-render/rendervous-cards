@@ -1,21 +1,61 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ArrowLeft, Save, Check, Loader2 } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import TradingCard from '@/components/TradingCard';
 import { transformAnswers } from '@/lib/cardTransforms';
 import { CardAnswers, CARD_THEMES } from '@/lib/types';
+import { saveCard } from '@/lib/api';
 
 const CardPreview = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const answers = location.state?.answers as CardAnswers | undefined;
   const [themeIndex, setThemeIndex] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const card = useMemo(() => {
     if (!answers) return null;
     return transformAnswers(answers, themeIndex % CARD_THEMES.length, themeIndex);
   }, [answers, themeIndex]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!cardRef.current || !card || !answers) throw new Error('No card to save');
+
+      const dataUrl = await toPng(cardRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+      });
+
+      return saveCard(card, answers, dataUrl);
+    },
+    onSuccess: () => {
+      toast.success('Card saved to Gallery!', {
+        action: {
+          label: 'View Gallery',
+          onClick: () => navigate('/gallery'),
+        },
+      });
+    },
+    onError: () => {
+      toast.error('Failed to save card. Please try again.');
+    },
+  });
+
+  useEffect(() => {
+    saveMutation.reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [themeIndex]);
+
+  const handleSave = useCallback(() => {
+    if (!saveMutation.isPending) {
+      saveMutation.mutate();
+    }
+  }, [saveMutation]);
 
   if (!answers || !card) {
     return (
@@ -54,7 +94,9 @@ const CardPreview = () => {
           <h1 className="card-font-display text-2xl font-bold text-foreground">Your Card is Ready! 🎉</h1>
         </motion.div>
 
-        <TradingCard card={card} answers={answers} />
+        <div ref={cardRef}>
+          <TradingCard card={card} answers={answers} />
+        </div>
 
         <div className="flex justify-center gap-4 mt-8">
           <motion.button
@@ -67,6 +109,24 @@ const CardPreview = () => {
             }}
           >
             <RefreshCw className="w-4 h-4" /> Regenerate
+          </motion.button>
+          <motion.button
+            onClick={handleSave}
+            disabled={saveMutation.isPending || saveMutation.isSuccess}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 card-font-display text-sm font-semibold text-white shadow-md transition-all disabled:opacity-70"
+            style={{
+              background: 'linear-gradient(135deg, hsl(180 60% 35%), hsl(210 65% 40%))',
+            }}
+          >
+            {saveMutation.isPending ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+            ) : saveMutation.isSuccess ? (
+              <><Check className="w-4 h-4" /> Saved!</>
+            ) : (
+              <><Save className="w-4 h-4" /> Save to Gallery</>
+            )}
           </motion.button>
           <motion.button
             onClick={() => navigate('/')}
