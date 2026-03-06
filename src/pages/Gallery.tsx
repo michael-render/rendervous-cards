@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, X } from 'lucide-react';
+import { Download, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import rendyTemplate from '@/assets/rendy-template.png';
@@ -65,11 +65,20 @@ const Gallery = () => {
       </div>
 
       <div className="max-w-5xl mx-auto relative z-10">
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+        <div className="flex items-center justify-between gap-4 mb-8">
           <h1 className="card-font-display text-3xl font-bold text-foreground">Card Gallery</h1>
+          <motion.button
+            onClick={() => navigate('/create')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 card-font-display text-sm font-semibold text-white shadow-md transition-all"
+            style={{
+              background: 'linear-gradient(135deg, hsl(280 50% 45%), hsl(310 55% 50%), hsl(340 55% 50%))',
+            }}
+          >
+            <Sparkles className="h-4 w-4" />
+            Create New Card
+          </motion.button>
         </div>
 
         {isLoading && (
