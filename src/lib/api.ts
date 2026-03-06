@@ -5,7 +5,15 @@ const DEFAULT_API_URL =
     ? 'https://rendervous-cards-api.onrender.com'
     : 'http://localhost:3001';
 
-const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+export const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+
+export interface CardSummary {
+  id: string;
+  name: string;
+  archetype_title: string;
+  theme: string;
+  created_at: string;
+}
 
 export async function saveCard(
   card: TransformedCard,
@@ -27,4 +35,17 @@ export async function saveCard(
   }
 
   return res.json();
+}
+
+export async function listCards(limit = 100, offset = 0): Promise<CardSummary[]> {
+  const res = await fetch(`${API_URL}/api/cards?limit=${limit}&offset=${offset}`);
+  if (!res.ok) {
+    const details = await res.text().catch(() => '');
+    throw new Error(`Failed to fetch cards (${res.status}): ${details}`);
+  }
+  return res.json();
+}
+
+export function getCardThumbnailUrl(cardId: string): string {
+  return `${API_URL}/api/cards/${cardId}/thumbnail`;
 }

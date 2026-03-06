@@ -10,6 +10,35 @@ import { transformAnswers } from '@/lib/cardTransforms';
 import { CardAnswers, CARD_THEMES } from '@/lib/types';
 import { saveCard } from '@/lib/api';
 
+async function blobUrlToDataUrl(blobUrl: string): Promise<string> {
+  const response = await fetch(blobUrl);
+  if (!response.ok) {
+    throw new Error(`Unable to read uploaded image (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (result) {
+        resolve(result);
+      } else {
+        reject(new Error('Unable to encode uploaded image'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Unable to encode uploaded image'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function getFallbackImage(photoUrl: string): Promise<string | null> {
+  if (!photoUrl) return null;
+  if (photoUrl.startsWith('data:image/')) return photoUrl;
+  if (photoUrl.startsWith('blob:')) return blobUrlToDataUrl(photoUrl);
+  return null;
+}
+
 const CardPreview = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,15 +59,14 @@ const CardPreview = () => {
       try {
         dataUrl = await toPng(cardRef.current, {
           pixelRatio: 2,
-          cacheBust: true,
         });
       } catch (error) {
         // Fallback when DOM-to-image fails in some browser/runtime combinations.
-        if (answers.photoUrl && answers.photoUrl.startsWith('data:image/')) {
-          dataUrl = answers.photoUrl;
-        } else {
+        const fallbackImage = await getFallbackImage(answers.photoUrl);
+        if (!fallbackImage) {
           throw error;
         }
+        dataUrl = fallbackImage;
       }
 
       return saveCard(card, answers, dataUrl);
