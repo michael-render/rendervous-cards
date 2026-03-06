@@ -20,8 +20,12 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      onChange(url);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        if (result) onChange(result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
