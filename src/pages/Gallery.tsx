@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import rendyTemplate from '@/assets/rendy-template.png';
-import { getCardThumbnailUrl, listCards } from '@/lib/api';
+import { CardSummary, getCardImageUrl, getCardThumbnailUrl, listCards } from '@/lib/api';
 import GalleryLink from '@/components/GalleryLink';
 
 const Gallery = () => {
@@ -12,6 +13,43 @@ const Gallery = () => {
     queryKey: ['cards'],
     queryFn: () => listCards(100, 0),
   });
+  const [selectedCard, setSelectedCard] = useState<CardSummary | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCard) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedCard(null);
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedCard]);
+
+  const handleDownload = async () => {
+    if (!selectedCard || isDownloading) return;
+
+    try {
+      setIsDownloading(true);
+      const response = await fetch(getCardImageUrl(selectedCard.id));
+      if (!response.ok) {
+        throw new Error(`Failed to download card (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `${selectedCard.name.replace(/\s+/g, '-').toLowerCase()}-card.png`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen px-4 py-12 relative">
@@ -91,7 +129,8 @@ const Gallery = () => {
             {cards.map((card) => (
               <article
                 key={card.id}
-                className="rounded-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm"
+                className="rounded-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
+                onClick={() => setSelectedCard(card)}
               >
                 <img
                   src={getCardThumbnailUrl(card.id)}
@@ -108,6 +147,52 @@ const Gallery = () => {
           </motion.div>
         )}
       </div>
+
+      {selectedCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-xl border border-white/20 bg-[hsl(250_30%_12%)] p-4"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedCard(null)}
+              className="absolute right-3 top-3 rounded-md p-1 text-white/80 hover:text-white"
+              aria-label="Close preview"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <img
+              src={getCardImageUrl(selectedCard.id)}
+              alt={`${selectedCard.name} full card`}
+              className="w-full rounded-lg object-cover"
+            />
+
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="card-font-display text-lg text-foreground truncate">{selectedCard.name}</p>
+                <p className="card-font-body text-sm text-muted-foreground truncate">{selectedCard.archetype_title}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="inline-flex items-center gap-2 rounded-lg px-4 py-2 card-font-display text-sm font-semibold text-white disabled:opacity-70"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(180 60% 35%), hsl(210 65% 40%))',
+                }}
+              >
+                <Download className="h-4 w-4" />
+                {isDownloading ? 'Downloading...' : 'Download'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

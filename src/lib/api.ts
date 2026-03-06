@@ -49,3 +49,7 @@ export async function listCards(limit = 100, offset = 0): Promise<CardSummary[]>
 export function getCardThumbnailUrl(cardId: string): string {
   return `${API_URL}/api/cards/${cardId}/thumbnail`;
 }
+
+export function getCardImageUrl(cardId: string): string {
+  return `${API_URL}/api/cards/${cardId}/image`;
+}
