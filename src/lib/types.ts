@@ -20,33 +20,21 @@ export interface TransformedCard {
   name: string;
   archetypeTitle: string;
   specialAbility: string;
+  specialAbilityDetail: string;
   sideQuest: string;
+  sideQuestDetail: string;
   signatureMove: string;
+  signatureMoveDetail: string;
   powerSource: string;
+  powerSourceDetail: string;
   
   inventoryItems: InventoryItem[];
   theme: CardTheme;
 }
 
-export interface GalleryCard {
-  id: string;
-  name: string;
-  archetype_title: string;
-  theme: CardTheme;
-  created_at: string;
-}
-
 export type CardTheme = 'coral' | 'mint' | 'sky' | 'lavender' | 'peach';
 
 export const CARD_THEMES: CardTheme[] = ['coral', 'mint', 'sky', 'lavender', 'peach'];
-
-export const THEME_BORDERS: Record<CardTheme, string> = {
-  coral: 'border-coral',
-  mint: 'border-mint',
-  sky: 'border-sky',
-  lavender: 'border-lavender',
-  peach: 'border-peach',
-};
 
 export const THEME_GRADIENTS: Record<CardTheme, { from: string; to: string; accent: string }> = {
   coral: { from: 'from-coral-light', to: 'to-pink-light', accent: 'coral' },

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,39 +6,47 @@
 
 @layer base {
   :root {
-    --background: 30 50% 97%;
-    --foreground: 260 20% 25%;
+    --background: 235 50% 10%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 260 20% 25%;
+    --card: 235 40% 16%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 260 20% 25%;
+    --popover: 235 40% 14%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 350 70% 65%;
+    --primary: 310 55% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 45% 78%;
-    --secondary-foreground: 170 40% 20%;
+    --secondary: 270 40% 35%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 30 30% 93%;
-    --muted-foreground: 260 10% 50%;
+    --muted: 235 30% 18%;
+    --muted-foreground: 240 15% 65%;
 
-    --accent: 260 50% 75%;
-    --accent-foreground: 260 40% 20%;
+    --accent: 280 45% 40%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 350 70% 65%;
+    --border: 250 30% 25%;
+    --input: 240 25% 20%;
+    --ring: 310 55% 55%;
 
     --radius: 1rem;
 
-    /* Pastel theme tokens */
-    --coral: 350 70% 75%;
-    --coral-light: 350 70% 90%;
+    /* Render brand palette */
+    --render-indigo: 235 45% 20%;
+    --render-indigo-mid: 250 40% 35%;
+    --render-purple: 270 50% 45%;
+    --render-magenta: 310 55% 50%;
+    --render-coral: 345 60% 58%;
+    --render-coral-light: 345 55% 70%;
+
+    /* Legacy pastel tokens (kept for non-card UI) */
+    --coral: 345 60% 58%;
+    --coral-light: 345 55% 80%;
     --mint: 170 45% 75%;
     --mint-light: 170 45% 90%;
     --sky: 200 60% 75%;
@@ -52,13 +60,16 @@
     --green: 150 40% 70%;
     --green-light: 150 40% 90%;
 
-    /* Card specific */
-    --card-border: 350 70% 75%;
-    --card-glow: 350 70% 65%;
-    --card-header-bg: 350 70% 92%;
-    --shimmer-1: 350 70% 85%;
-    --shimmer-2: 200 60% 85%;
-    --shimmer-3: 260 50% 85%;
+    /* Card specific — Render gradient system */
+    --card-border: 270 50% 50%;
+    --card-glow: 310 55% 55%;
+    --card-header-bg: 235 45% 22%;
+    --card-bg-from: 235 50% 16%;
+    --card-bg-via: 270 45% 28%;
+    --card-bg-to: 340 50% 35%;
+    --shimmer-1: 270 50% 60%;
+    --shimmer-2: 310 55% 55%;
+    --shimmer-3: 345 60% 60%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -82,6 +93,14 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Fredoka', sans-serif;
+  }
+
+  /* Card-specific font override */
+  .card-font-display {
+    font-family: 'DM Sans', 'Inter', sans-serif;
+  }
+  .card-font-body {
+    font-family: 'Inter', 'DM Sans', sans-serif;
   }
 }
 
@@ -113,8 +132,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--card-glow) / 0.2); }
-  50% { box-shadow: 0 0 40px hsl(var(--card-glow) / 0.4); }
+  0%, 100% { box-shadow: 0 0 25px hsl(var(--card-glow) / 0.25), 0 0 60px hsl(var(--card-bg-via) / 0.15); }
+  50% { box-shadow: 0 0 45px hsl(var(--card-glow) / 0.45), 0 0 80px hsl(var(--card-bg-via) / 0.25); }
 }
 
 @keyframes badge-wobble {
@@ -135,16 +154,15 @@
   background: linear-gradient(
     125deg,
     transparent 10%,
-    hsl(300 80% 70% / 0.12) 20%,
-    hsl(180 90% 65% / 0.18) 30%,
-    hsl(60 90% 70% / 0.12) 40%,
-    hsl(120 80% 60% / 0.15) 50%,
-    hsl(240 85% 70% / 0.18) 60%,
-    hsl(330 80% 65% / 0.12) 70%,
+    hsl(270 60% 65% / 0.15) 20%,
+    hsl(310 55% 55% / 0.20) 35%,
+    hsl(345 55% 60% / 0.15) 50%,
+    hsl(270 55% 60% / 0.18) 65%,
+    hsl(240 50% 55% / 0.12) 80%,
     transparent 90%
   );
   background-size: 400% 400%;
-  animation: holographic 4s ease-in-out infinite;
+  animation: holographic 5s ease-in-out infinite;
   pointer-events: none;
   border-radius: inherit;
   z-index: 10;
@@ -159,9 +177,10 @@
     repeating-linear-gradient(
       135deg,
       transparent 0px,
-      hsl(0 0% 100% / 0.03) 2px,
-      transparent 4px
-    );
+      hsl(0 0% 100% / 0.02) 1px,
+      transparent 3px
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   border-radius: inherit;
   z-index: 11;
@@ -169,41 +188,42 @@
 
 /* TCG stat row styles */
 .stat-row {
-  padding: 0.375rem 0.5rem;
+  padding: 0.4rem 0.5rem;
 }
 
 .stat-row-header {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.4rem;
 }
 
 .stat-label {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: hsl(var(--foreground));
+  letter-spacing: 0.14em;
+  color: hsl(0 0% 100% / 0.65);
   white-space: nowrap;
 }
 
 .stat-value {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: hsl(var(--foreground) / 0.85);
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(0 0% 100%);
   line-height: 1.2;
-  background: linear-gradient(135deg, hsl(var(--card-border) / 0.12), hsl(var(--card-border) / 0.04));
-  border: 1px solid hsl(var(--card-border) / 0.2);
-  border-radius: 0.375rem;
-  padding: 0.2rem 0.4rem;
+  background: linear-gradient(135deg, hsl(0 0% 100% / 0.12), hsl(0 0% 100% / 0.05));
+  border: 1px solid hsl(var(--card-glow) / 0.30);
+  border-radius: 3px;
+  padding: 0.25rem 0.45rem;
+  backdrop-filter: blur(4px);
 }
 
 .stat-divider {
   height: 1px;
   margin: 0 0.25rem;
-  background: linear-gradient(90deg, transparent, hsl(var(--card-border) / 0.35), transparent);
+  background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.15), transparent);
 }
 
 .animate-float { animation: float 3s ease-in-out infinite; }
@@ -211,50 +231,65 @@
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-badge-wobble { animation: badge-wobble 3s ease-in-out infinite; }
 
-/* Card themes */
+/* Card themes — Render gradient variations with color blocking */
 .card-theme-coral {
-  --card-border: 350 70% 75%;
-  --card-glow: 350 70% 65%;
-  --card-header-bg: 350 70% 92%;
-  --shimmer-1: 350 70% 85%;
-  --shimmer-2: 25 80% 85%;
-  --shimmer-3: 330 60% 85%;
+  --card-border: 340 55% 52%;
+  --card-glow: 345 65% 68%;
+  --card-header-bg: 240 40% 20%;
+  --card-bg-from: 235 50% 13%;
+  --card-bg-via: 295 45% 32%;
+  --card-bg-to: 345 58% 45%;
+  --shimmer-1: 345 60% 60%;
+  --shimmer-2: 290 50% 55%;
+  --shimmer-3: 240 45% 50%;
 }
 
 .card-theme-mint {
-  --card-border: 170 45% 70%;
-  --card-glow: 170 45% 55%;
-  --card-header-bg: 170 45% 92%;
-  --shimmer-1: 170 45% 85%;
-  --shimmer-2: 150 40% 85%;
-  --shimmer-3: 200 60% 85%;
+  --card-border: 265 50% 58%;
+  --card-glow: 275 55% 72%;
+  --card-header-bg: 230 45% 20%;
+  --card-bg-from: 228 55% 12%;
+  --card-bg-via: 265 48% 33%;
+  --card-bg-to: 315 50% 42%;
+  --shimmer-1: 260 50% 60%;
+  --shimmer-2: 310 45% 55%;
+  --shimmer-3: 230 45% 50%;
 }
 
 .card-theme-sky {
-  --card-border: 200 60% 70%;
-  --card-glow: 200 60% 55%;
-  --card-header-bg: 200 60% 92%;
-  --shimmer-1: 200 60% 85%;
-  --shimmer-2: 260 50% 85%;
-  --shimmer-3: 170 45% 85%;
+  --card-border: 255 55% 58%;
+  --card-glow: 245 60% 72%;
+  --card-header-bg: 235 50% 18%;
+  --card-bg-from: 232 58% 11%;
+  --card-bg-via: 260 48% 30%;
+  --card-bg-to: 305 48% 38%;
+  --shimmer-1: 240 55% 60%;
+  --shimmer-2: 280 50% 55%;
+  --shimmer-3: 320 50% 55%;
 }
 
 .card-theme-lavender {
-  --card-border: 260 50% 73%;
-  --card-glow: 260 50% 60%;
-  --card-header-bg: 260 50% 93%;
-  --shimmer-1: 260 50% 88%;
-  --shimmer-2: 330 60% 85%;
-  --shimmer-3: 200 60% 85%;
+  --card-border: 282 55% 58%;
+  --card-glow: 295 60% 68%;
+  --card-header-bg: 250 45% 20%;
+  --card-bg-from: 242 52% 13%;
+  --card-bg-via: 282 48% 32%;
+  --card-bg-to: 325 52% 42%;
+  --shimmer-1: 280 55% 60%;
+  --shimmer-2: 320 50% 55%;
+  --shimmer-3: 245 50% 55%;
 }
 
 .card-theme-peach {
-  --card-border: 25 80% 73%;
-  --card-glow: 25 80% 60%;
-  --card-header-bg: 25 80% 93%;
-  --shimmer-1: 25 80% 88%;
-  --shimmer-2: 350 70% 85%;
-  --shimmer-3: 170 45% 85%;
+  --card-border: 322 55% 54%;
+  --card-glow: 335 60% 68%;
+  --card-header-bg: 238 42% 22%;
+  --card-bg-from: 235 50% 14%;
+  --card-bg-via: 285 45% 34%;
+  --card-bg-to: 340 55% 45%;
+  --shimmer-1: 330 55% 58%;
+  --shimmer-2: 280 50% 55%;
+  --shimmer-3: 238 48% 50%;
 }
 
 /* Ribbon style for side quest */
@@ -262,7 +297,7 @@
   position: relative;
   background: linear-gradient(135deg, hsl(var(--card-border) / 0.15), hsl(var(--card-border) / 0.08));
   border: 2px solid hsl(var(--card-border) / 0.4);
-  border-radius: 0.75rem;
+  border-radius: 3px;
   padding: 0.5rem 1rem;
 }
 
@@ -291,17 +326,18 @@
 .inventory-frame {
   width: 60px;
   height: 60px;
-  border-radius: 12px;
-  border: 3px solid hsl(var(--card-border) / 0.5);
+  border-radius: 3px;
+  border: 1.5px solid hsl(var(--card-glow) / 0.35);
   background: linear-gradient(
     145deg,
-    hsl(var(--card-header-bg)),
-    hsl(var(--card) / 0.8)
+    hsl(0 0% 100% / 0.08),
+    hsl(0 0% 100% / 0.03)
   );
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    inset 0 1px 2px hsl(0 0% 100% / 0.4),
-    0 2px 6px hsl(var(--card-border) / 0.2);
+    inset 0 1px 2px hsl(0 0% 100% / 0.08),
+    0 2px 8px hsl(var(--card-glow) / 0.15);
 }

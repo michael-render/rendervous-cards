@@ -8,11 +8,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Background decorations */}
+      {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-coral-light/40 blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-lavender-light/40 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-mint-light/30 blur-3xl" />
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(ellipse 100% 70% at 80% 100%, hsl(340 55% 30% / 0.5) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 60% at 20% 0%, hsl(250 50% 25% / 0.6) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 50% 50%, hsl(280 40% 20% / 0.4) 0%, transparent 60%)
+          `,
+        }} />
       </div>
 
       <motion.div
@@ -29,21 +33,24 @@ const Index = () => {
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-3 leading-tight">
+        <h1 className="card-font-display text-4xl md:text-5xl font-bold text-foreground mb-3 leading-tight tracking-tight">
           Render
           <br />
-          <span className="text-primary">Stat Cards</span>
+          <span className="bg-gradient-to-r from-[hsl(310,55%,60%)] to-[hsl(345,60%,65%)] bg-clip-text text-transparent">Trading Cards</span>
         </h1>
 
-        <p className="font-body text-lg text-muted-foreground mb-8 leading-relaxed">
-          Answer a few fun questions and get your own collectible trading card! ✨
+        <p className="card-font-body text-lg text-muted-foreground mb-8 leading-relaxed">
+          Answer a few questions to mint your own collectible trading card! ✨
         </p>
 
         <motion.button
           onClick={() => navigate('/create')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 font-display text-lg font-bold text-primary-foreground shadow-lg hover:shadow-xl transition-shadow"
+          className="inline-flex items-center gap-2 rounded-none px-8 py-4 card-font-display text-lg font-bold text-white shadow-lg hover:shadow-xl transition-all"
+          style={{
+            background: 'linear-gradient(135deg, hsl(280 50% 45%), hsl(310 55% 50%), hsl(340 55% 50%))',
+          }}
         >
           <Sparkles className="w-5 h-5" />
           Create My Card

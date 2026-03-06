@@ -7,10 +7,10 @@ import { CardAnswers } from '@/lib/types';
 import rendyThumbsUp from '@/assets/rendy-thumbs-up.png';
 
 const QUESTIONS = [
-  { key: 'name', question: "What's your name?", placeholder: 'e.g. Alex Chen' },
-  { key: 'role', question: "What's your role at Render?", subtitle: "(Used to generate your card's character title — not shown verbatim)", placeholder: 'e.g. Product Designer' },
-  { key: 'photoUrl', question: "Upload a photo of yourself", subtitle: "This will be used as your card illustration (optional)", placeholder: '', isPhotoUpload: true, optional: true },
-  { key: 'hobby', question: "What do you like to do outside of work?", placeholder: 'e.g. I bake elaborate cakes' },
+  { key: 'name', question: "What's your name?", placeholder: 'e.g. Rendy Raccoon' },
+  { key: 'role', question: "What do you do at Render?", subtitle: "This can be literal, metaphorical, or vibes-based.", placeholder: 'e.g. I keep the deploys flowing' },
+  { key: 'photoUrl', question: "Upload a photo of yourself", subtitle: "This will be used as your card illustration", placeholder: '', isPhotoUpload: true },
+  { key: 'hobby', question: "What do you like to do for fun?", placeholder: 'e.g. I bake elaborate cakes' },
   { key: 'unpopularOpinion', question: "What's your most #unpopular-opinion?", placeholder: 'e.g. Pizza is overrated' },
   { key: 'workHack', question: "What's a work hack you swear by?", placeholder: 'e.g. Color-coded calendar blocks' },
   
@@ -27,8 +27,7 @@ const CreateCard = () => {
   const current = QUESTIONS[step];
   const value = answers[current.key] || '';
   const isLast = step === QUESTIONS.length - 1;
-  const isOptional = 'optional' in current && (current as any).optional;
-  const canProceed = isOptional || value.trim().length > 0;
+  const canProceed = value.trim().length > 0;
 
   const handleChange = useCallback((val: string) => {
     setAnswers(prev => ({ ...prev, [current.key]: val }));
@@ -61,17 +60,22 @@ const CreateCard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" onKeyDown={handleKeyDown}>
-      {/* Background blobs */}
+      {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-10 right-20 w-48 h-48 rounded-full bg-peach-light/30 blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-36 h-36 rounded-full bg-sky-light/30 blur-3xl" />
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(ellipse 90% 60% at 90% 90%, hsl(330 50% 25% / 0.4) 0%, transparent 55%),
+            radial-gradient(ellipse 70% 50% at 10% 10%, hsl(255 45% 22% / 0.5) 0%, transparent 50%)
+          `,
+        }} />
       </div>
 
       <div className="relative z-10 w-full max-w-lg">
         <motion.img
           src={rendyThumbsUp}
           alt="Rendy"
-          className="w-16 h-16 mx-auto mb-4 opacity-70"
+          className="w-16 h-16 mx-auto mb-4"
+          style={{ filter: 'drop-shadow(0 0 12px hsl(270 50% 55% / 0.6))' }}
           animate={{ rotate: [0, 5, -5, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
         />
@@ -95,7 +99,7 @@ const CreateCard = () => {
           <button
             onClick={() => setStep(s => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="inline-flex items-center gap-1 font-display text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+            className="inline-flex items-center gap-1 card-font-display text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
@@ -104,7 +108,12 @@ const CreateCard = () => {
             disabled={!canProceed}
             whileHover={canProceed ? { scale: 1.05 } : {}}
             whileTap={canProceed ? { scale: 0.95 } : {}}
-            className="inline-flex items-center gap-1 rounded-xl bg-primary px-6 py-2.5 font-display text-sm font-bold text-primary-foreground shadow-md disabled:opacity-40 transition-all"
+            className="inline-flex items-center gap-1 rounded-none px-6 py-2.5 card-font-display text-sm font-bold text-white shadow-md disabled:opacity-40 transition-all"
+            style={{
+              background: canProceed
+                ? 'linear-gradient(135deg, hsl(280 50% 45%), hsl(310 55% 50%), hsl(340 55% 50%))'
+                : 'hsl(250 30% 25%)',
+            }}
           >
             {isLast ? (
               <>

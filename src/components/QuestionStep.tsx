@@ -20,13 +20,8 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          onChange(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+      const url = URL.createObjectURL(file);
+      onChange(url);
     }
   };
 
@@ -39,12 +34,13 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
       className="w-full max-w-lg mx-auto"
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="font-display text-sm text-muted-foreground">
+        <span className="card-font-display text-sm text-muted-foreground">
           {step} of {total}
         </span>
-        <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+        <div className="flex-1 h-2 overflow-hidden" style={{ background: 'hsl(250 30% 20%)' }}>
           <motion.div
-            className="h-full rounded-full bg-primary"
+            className="h-full"
+            style={{ background: 'linear-gradient(90deg, hsl(270 50% 50%), hsl(310 55% 55%), hsl(340 55% 55%))' }}
             initial={{ width: 0 }}
             animate={{ width: `${(step / total) * 100}%` }}
             transition={{ duration: 0.4 }}
@@ -52,11 +48,11 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
         </div>
       </div>
 
-      <h2 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-1 leading-snug">
+      <h2 className="card-font-display text-xl md:text-2xl font-semibold text-foreground mb-1 leading-snug">
         {question}
       </h2>
       {subtitle && (
-        <p className="font-body text-sm text-muted-foreground mb-4">{subtitle}</p>
+        <p className="card-font-body text-sm text-muted-foreground mb-4">{subtitle}</p>
       )}
       {!subtitle && <div className="mb-4" />}
 
@@ -74,10 +70,11 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
               <img
                 src={value}
                 alt="Your photo"
-                className="w-40 h-40 rounded-2xl object-cover border-4 border-card-border shadow-lg"
+                className="w-40 h-40 object-cover shadow-lg"
+                style={{ border: '3px solid hsl(280 50% 45% / 0.5)' }}
               />
-              <div className="absolute inset-0 rounded-2xl bg-foreground/0 group-hover:bg-foreground/20 transition-colors flex items-center justify-center">
-                <Camera className="w-8 h-8 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           ) : (
@@ -86,20 +83,28 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
               onClick={() => fileRef.current?.click()}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="w-40 h-40 rounded-2xl border-4 border-dashed border-card-border bg-card flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+              className="w-40 h-40 border-4 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              style={{
+                borderColor: 'hsl(280 50% 40% / 0.5)',
+                background: 'hsl(250 35% 15%)',
+              }}
             >
               <Camera className="w-10 h-10" />
-              <span className="font-display text-sm">Upload Photo</span>
+              <span className="card-font-display text-sm">Upload Photo</span>
             </motion.button>
           )}
-          <p className="font-body text-xs text-muted-foreground">Tap to {value ? 'change' : 'upload'} your photo</p>
+          <p className="card-font-body text-xs text-muted-foreground">Tap to {value ? 'change' : 'upload'} your photo</p>
         </div>
       ) : isTextarea ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border-2 border-card-border bg-card px-4 py-3 font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none h-28"
+          className="w-full px-4 py-3 card-font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all resize-none h-28"
+          style={{
+            background: 'hsl(240 30% 15%)',
+            border: '2px solid hsl(260 35% 28%)',
+          }}
         />
       ) : (
         <input
@@ -107,7 +112,11 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border-2 border-card-border bg-card px-4 py-3 font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+          className="w-full px-4 py-3 card-font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all"
+          style={{
+            background: 'hsl(240 30% 15%)',
+            border: '2px solid hsl(260 35% 28%)',
+          }}
         />
       )}
     </motion.div>
