@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Camera } from 'lucide-react';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface QuestionStepProps {
   question: string;
@@ -16,6 +16,13 @@ interface QuestionStepProps {
 
 const QuestionStep = ({ question, placeholder, value, onChange, step, total, isTextarea, subtitle, isPhotoUpload }: QuestionStepProps) => {
   const fileRef = useRef<HTMLInputElement>(null);
+  const uploadTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isPhotoUpload) {
+      uploadTriggerRef.current?.focus();
+    }
+  }, [isPhotoUpload, step]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -70,7 +77,12 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
             onChange={handleFileChange}
           />
           {value ? (
-            <div className="relative group cursor-pointer" onClick={() => fileRef.current?.click()}>
+            <button
+              type="button"
+              ref={uploadTriggerRef}
+              className="relative group cursor-pointer"
+              onClick={() => fileRef.current?.click()}
+            >
               <img
                 src={value}
                 alt="Your photo"
@@ -80,10 +92,11 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                 <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            </div>
+            </button>
           ) : (
             <motion.button
               type="button"
+              ref={uploadTriggerRef}
               onClick={() => fileRef.current?.click()}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -101,6 +114,7 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
         </div>
       ) : isTextarea ? (
         <textarea
+          autoFocus
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -113,6 +127,7 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
       ) : (
         <input
           type="text"
+          autoFocus
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
