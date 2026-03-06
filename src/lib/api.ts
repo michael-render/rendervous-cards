@@ -53,3 +53,17 @@ export function getCardThumbnailUrl(cardId: string): string {
 export function getCardImageUrl(cardId: string): string {
   return `${API_URL}/api/cards/${cardId}/image`;
 }
+
+export async function deleteCard(cardId: string, adminToken: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/cards/${cardId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    const details = await res.text().catch(() => '');
+    throw new Error(`Failed to delete card (${res.status}): ${details}`);
+  }
+}

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -72,18 +72,30 @@ const Gallery = () => {
             </button>
             <h1 className="card-font-display text-3xl font-bold text-foreground">Card Gallery</h1>
           </div>
-          <motion.button
-            onClick={() => navigate('/create')}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 card-font-display text-sm font-semibold text-white shadow-md transition-all"
-            style={{
-              background: 'linear-gradient(135deg, hsl(280 50% 45%), hsl(310 55% 50%), hsl(340 55% 50%))',
-            }}
-          >
-            <Sparkles className="h-4 w-4" />
-            Create New Card
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={() => navigate('/create')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 card-font-display text-sm font-semibold text-white shadow-md transition-all"
+              style={{
+                background: 'linear-gradient(135deg, hsl(280 50% 45%), hsl(310 55% 50%), hsl(340 55% 50%))',
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              Create New Card
+            </motion.button>
+            <Link
+              to="/gallery/manage"
+              className="inline-flex items-center rounded-xl px-4 py-2.5 card-font-display text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{
+                border: '1px solid hsl(0 0% 100% / 0.22)',
+                background: 'hsl(250 28% 16% / 0.75)',
+              }}
+            >
+              Manage
+            </Link>
+          </div>
         </div>
 
         {isLoading && (
