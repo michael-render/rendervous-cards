@@ -26,10 +26,20 @@ const CardPreview = () => {
     mutationFn: async () => {
       if (!cardRef.current || !card || !answers) throw new Error('No card to save');
 
-      const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-      });
+      let dataUrl: string;
+      try {
+        dataUrl = await toPng(cardRef.current, {
+          pixelRatio: 2,
+          cacheBust: true,
+        });
+      } catch (error) {
+        // Fallback when DOM-to-image fails in some browser/runtime combinations.
+        if (answers.photoUrl && answers.photoUrl.startsWith('data:image/')) {
+          dataUrl = answers.photoUrl;
+        } else {
+          throw error;
+        }
+      }
 
       return saveCard(card, answers, dataUrl);
     },
@@ -43,7 +53,8 @@ const CardPreview = () => {
     },
     onError: (error) => {
       console.error('Failed to save card:', error);
-      toast.error('Failed to save card. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to save card. Please try again.';
+      toast.error(message);
     },
   });
 
