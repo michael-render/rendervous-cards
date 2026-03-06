@@ -2,12 +2,14 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import rendyWoohoo from '@/assets/rendy-woohoo.png';
+import GalleryLink from '@/components/GalleryLink';
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      <GalleryLink />
       {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0" style={{

@@ -6,6 +6,7 @@ import { toPng } from 'html-to-image';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import TradingCard from '@/components/TradingCard';
+import GalleryLink from '@/components/GalleryLink';
 import { transformAnswers } from '@/lib/cardTransforms';
 import { CardAnswers, CARD_THEMES } from '@/lib/types';
 import { saveCard } from '@/lib/api';
@@ -115,6 +116,7 @@ const CardPreview = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
+      <GalleryLink />
       {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0" style={{

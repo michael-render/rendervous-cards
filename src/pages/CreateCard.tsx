@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import QuestionStep from '@/components/QuestionStep';
 import { CardAnswers } from '@/lib/types';
 import rendyThumbsUp from '@/assets/rendy-thumbs-up.png';
+import GalleryLink from '@/components/GalleryLink';
 
 const QUESTIONS = [
   { key: 'name', question: "What's your name?", placeholder: 'e.g. Rendy Raccoon' },
@@ -60,6 +61,7 @@ const CreateCard = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" onKeyDown={handleKeyDown}>
+      <GalleryLink />
       {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0" style={{

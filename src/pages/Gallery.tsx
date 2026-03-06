@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import rendyTemplate from '@/assets/rendy-template.png';
 import { getCardThumbnailUrl, listCards } from '@/lib/api';
+import GalleryLink from '@/components/GalleryLink';
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Gallery = () => {
 
   return (
     <div className="min-h-screen px-4 py-12 relative">
+      <GalleryLink />
       {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0" style={{
