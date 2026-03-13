@@ -77,6 +77,21 @@ Okta app settings should include:
 - Sign-in redirect URI: `https://<your-frontend-domain>/login/callback`
 - Sign-out redirect URI: your frontend root URL (if you add sign-out redirect flow)
 
+The API now verifies Okta Bearer access tokens for:
+
+- `POST /api/cards`
+- `GET /api/cards`
+- `GET /api/cards/:id`
+
+Set these environment variables for the API service:
+
+```sh
+OKTA_ISSUER=https://<your-okta-domain>
+OKTA_AUDIENCE=<optional-audience>
+```
+
+`OKTA_AUDIENCE` is optional, but recommended when your Okta setup provides a stable API audience claim.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

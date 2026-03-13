@@ -22,6 +22,10 @@ services:
         value: /var/data/cards
       - key: FRONTEND_URL
         value: https://rendervous-cards.onrender.com
+      - key: OKTA_ISSUER
+        sync: false
+      - key: OKTA_AUDIENCE
+        sync: false
       - key: NODE_ENV
         value: production
       - key: ADMIN_TOKEN

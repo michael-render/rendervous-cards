@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import sharp from 'sharp';
 import pool from '../db.js';
+import { requireOktaAuth } from '../auth.js';
 
 const router = Router();
 const STORAGE = process.env.CARD_STORAGE_PATH || './card-storage';
@@ -80,7 +81,7 @@ router.get('/health', async (_req, res) => {
 });
 
 // Save a new card
-router.post('/cards', async (req, res) => {
+router.post('/cards', requireOktaAuth, async (req, res) => {
   try {
     const { card, answers, image } = req.body;
 
@@ -133,7 +134,7 @@ router.post('/cards', async (req, res) => {
 });
 
 // List cards (paginated)
-router.get('/cards', async (req, res) => {
+router.get('/cards', requireOktaAuth, async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 100, 200);
     const offset = Math.max(parseInt(req.query.offset) || 0, 0);
@@ -173,7 +174,7 @@ router.post('/cards/:id/thumbnail', validateId, requireAdmin, async (req, res) =
 });
 
 // Get single card metadata
-router.get('/cards/:id', validateId, async (req, res) => {
+router.get('/cards/:id', validateId, requireOktaAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM cards WHERE id = $1`,
