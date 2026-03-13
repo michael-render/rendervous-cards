@@ -7,6 +7,7 @@ import apiRoutes from './routes/api.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+app.set('trust proxy', 1);
 
 // CORS
 const configuredOrigins = (process.env.FRONTEND_URLS || '')
