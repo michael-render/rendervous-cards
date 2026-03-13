@@ -60,6 +60,23 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Okta OAuth Setup
+
+This app now uses Okta OIDC (Authorization Code + PKCE) in the frontend.
+
+Set these environment variables for the frontend:
+
+```sh
+VITE_OKTA_ISSUER=https://<your-okta-domain>/oauth2/default
+VITE_OKTA_CLIENT_ID=<okta-spa-client-id>
+VITE_OKTA_REDIRECT_URI=https://<your-frontend-domain>/login/callback
+```
+
+Okta app settings should include:
+
+- Sign-in redirect URI: `https://<your-frontend-domain>/login/callback`
+- Sign-out redirect URI: your frontend root URL (if you add sign-out redirect flow)
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
