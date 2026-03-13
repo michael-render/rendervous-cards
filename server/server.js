@@ -9,9 +9,18 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS
+const configuredOrigins = (process.env.FRONTEND_URLS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:8080',
+  'http://localhost:5173',
   process.env.FRONTEND_URL,
+  'https://rendervous-cards-frontend.onrender.com',
+  'https://rendervous-cards.onrender.com',
+  ...configuredOrigins,
 ].filter(Boolean);
 
 app.use(cors({
