@@ -40,6 +40,28 @@ async function getFallbackImage(photoUrl: string): Promise<string | null> {
   return null;
 }
 
+async function waitForImages(node: HTMLElement): Promise<void> {
+  const images = Array.from(node.querySelectorAll('img'));
+  const pending = images.filter((img) => !img.complete || img.naturalWidth === 0);
+
+  if (pending.length === 0) return;
+
+  await Promise.all(
+    pending.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          const finish = () => {
+            img.removeEventListener('load', finish);
+            img.removeEventListener('error', finish);
+            resolve();
+          };
+          img.addEventListener('load', finish, { once: true });
+          img.addEventListener('error', finish, { once: true });
+        }),
+    ),
+  );
+}
+
 const CardPreview = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,6 +80,7 @@ const CardPreview = () => {
 
       let dataUrl: string;
       try {
+        await waitForImages(cardRef.current);
         dataUrl = await toPng(cardRef.current, {
           pixelRatio: 2,
         });

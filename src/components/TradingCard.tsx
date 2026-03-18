@@ -93,6 +93,9 @@ const TradingCard = ({ card, answers }: TradingCardProps) => {
                     src={answers.photoUrl || rendyTemplate}
                     alt={card.name}
                     className="w-full h-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = rendyTemplate;
+                    }}
                   />
                   <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1 left-2 w-1.5 h-1.5 rounded-full animate-sparkle"
