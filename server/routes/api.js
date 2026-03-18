@@ -191,7 +191,7 @@ router.get('/cards/:id', validateId, requireOktaAuth, async (req, res) => {
 });
 
 // Serve full card image
-router.get('/cards/:id/image', validateId, async (req, res) => {
+router.get('/cards/:id/image', validateId, requireOktaAuth, async (req, res) => {
   try {
     const filePath = path.join(STORAGE, req.params.id, 'card.png');
     await fs.access(filePath);
@@ -203,7 +203,7 @@ router.get('/cards/:id/image', validateId, async (req, res) => {
 });
 
 // Serve thumbnail (fallback to full image)
-router.get('/cards/:id/thumbnail', validateId, async (req, res) => {
+router.get('/cards/:id/thumbnail', validateId, requireOktaAuth, async (req, res) => {
   try {
     const thumbPath = path.join(STORAGE, req.params.id, 'thumb.png');
     const fullPath = path.join(STORAGE, req.params.id, 'card.png');

@@ -29,6 +29,25 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
+function mergeHeaders(
+  authHeaders: Record<string, string>,
+  headers?: HeadersInit,
+): Headers {
+  const merged = new Headers(headers || {});
+  Object.entries(authHeaders).forEach(([key, value]) => {
+    merged.set(key, value);
+  });
+  return merged;
+}
+
+export async function authedFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const authHeaders = await getAuthHeaders();
+  return fetch(input, {
+    ...init,
+    headers: mergeHeaders(authHeaders, init.headers),
+  });
+}
+
 export async function saveCard(
   card: TransformedCard,
   answers: CardAnswers,
@@ -37,10 +56,9 @@ export async function saveCard(
   // Avoid sending large duplicate image data in answers.photoUrl.
   const { photoUrl: _photoUrl, ...answersWithoutPhoto } = answers;
 
-  const authHeaders = await getAuthHeaders();
-  const res = await fetch(`${API_URL}/api/cards`, {
+  const res = await authedFetch(`${API_URL}/api/cards`, {
     method: 'POST',
-    headers: { ...authHeaders, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ card, answers: answersWithoutPhoto, image }),
   });
 
@@ -53,10 +71,7 @@ export async function saveCard(
 }
 
 export async function listCards(limit = 100, offset = 0): Promise<CardSummary[]> {
-  const authHeaders = await getAuthHeaders();
-  const res = await fetch(`${API_URL}/api/cards?limit=${limit}&offset=${offset}`, {
-    headers: authHeaders,
-  });
+  const res = await authedFetch(`${API_URL}/api/cards?limit=${limit}&offset=${offset}`);
   if (!res.ok) {
     const details = await res.text().catch(() => '');
     throw new Error(`Failed to fetch cards (${res.status}): ${details}`);
@@ -70,6 +85,15 @@ export function getCardThumbnailUrl(cardId: string): string {
 
 export function getCardImageUrl(cardId: string): string {
   return `${API_URL}/api/cards/${cardId}/image`;
+}
+
+export async function fetchCardAssetBlob(cardId: string, variant: 'thumbnail' | 'image'): Promise<Blob> {
+  const path = variant === 'thumbnail' ? getCardThumbnailUrl(cardId) : getCardImageUrl(cardId);
+  const res = await authedFetch(path);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch ${variant} (${res.status})`);
+  }
+  return res.blob();
 }
 
 export async function deleteCard(cardId: string, adminToken: string): Promise<void> {

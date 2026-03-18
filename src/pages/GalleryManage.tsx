@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Trash2 } from 'lucide-react';
-import { deleteCard, getCardThumbnailUrl, listCards } from '@/lib/api';
+import { deleteCard, listCards } from '@/lib/api';
+import AuthedCardImage from '@/components/AuthedCardImage';
 
 const STORAGE_KEY = 'gallery_manage_admin_token';
 
@@ -98,8 +99,9 @@ const GalleryManage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {cardsQuery.data.map((card) => (
               <article key={card.id} className="rounded-xl overflow-hidden border border-white/10 bg-black/20">
-                <img
-                  src={getCardThumbnailUrl(card.id)}
+                <AuthedCardImage
+                  cardId={card.id}
+                  variant="thumbnail"
                   alt={`${card.name} card`}
                   className="w-full aspect-[4/5] object-cover"
                   loading="lazy"

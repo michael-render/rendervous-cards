@@ -4,8 +4,9 @@ import { ArrowLeft, Download, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import rendyTemplate from '@/assets/rendy-template.png';
-import { CardSummary, getCardImageUrl, getCardThumbnailUrl, listCards } from '@/lib/api';
+import { CardSummary, fetchCardAssetBlob, listCards } from '@/lib/api';
 import GalleryLink from '@/components/GalleryLink';
+import AuthedCardImage from '@/components/AuthedCardImage';
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -32,12 +33,7 @@ const Gallery = () => {
 
     try {
       setIsDownloading(true);
-      const response = await fetch(getCardImageUrl(selectedCard.id));
-      if (!response.ok) {
-        throw new Error(`Failed to download card (${response.status})`);
-      }
-
-      const blob = await response.blob();
+      const blob = await fetchCardAssetBlob(selectedCard.id, 'image');
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
@@ -146,8 +142,9 @@ const Gallery = () => {
                 className="rounded-b-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
                 onClick={() => setSelectedCard(card)}
               >
-                <img
-                  src={getCardThumbnailUrl(card.id)}
+                <AuthedCardImage
+                  cardId={card.id}
+                  variant="thumbnail"
                   alt={`${card.name} card`}
                   className="w-full aspect-[4/5] object-cover"
                   loading="lazy"
@@ -180,8 +177,9 @@ const Gallery = () => {
               <X className="h-5 w-5" />
             </button>
 
-            <img
-              src={getCardImageUrl(selectedCard.id)}
+            <AuthedCardImage
+              cardId={selectedCard.id}
+              variant="image"
               alt={`${selectedCard.name} full card`}
               className="w-full rounded-lg object-cover"
             />
