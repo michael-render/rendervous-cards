@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import fs from 'fs/promises';
 import pool, { initDB } from './db.js';
 import apiRoutes from './routes/api.js';
 
@@ -24,12 +23,21 @@ const allowedOrigins = [
   ...configuredOrigins,
 ].filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
   origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
+    if (!origin || allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    return cb(null, false);
   },
-}));
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  optionsSuccessStatus: 204,
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Rate limiting
 app.use('/api/cards', rateLimit({
@@ -49,9 +57,6 @@ app.use('/api', apiRoutes);
 let server;
 
 async function start() {
-  const storagePath = process.env.CARD_STORAGE_PATH || './card-storage';
-  await fs.mkdir(storagePath, { recursive: true });
-
   await initDB();
 
   server = app.listen(PORT, () => {
