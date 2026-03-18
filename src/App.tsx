@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,15 +6,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Security } from "@okta/okta-react";
 import { toRelativeUrl } from "@okta/okta-auth-js";
-import Index from "./pages/Index";
-import CreateCard from "./pages/CreateCard";
-import CardPreview from "./pages/CardPreview";
-import Gallery from "./pages/Gallery";
-import GalleryManage from "./pages/GalleryManage";
-import AuthCallback from "./pages/AuthCallback";
-import NotFound from "./pages/NotFound";
 import RequireAuth from "./components/RequireAuth";
 import { isOktaConfigured, oktaAuth } from "./lib/okta";
+
+const Index = lazy(() => import("./pages/Index"));
+const CreateCard = lazy(() => import("./pages/CreateCard"));
+const CardPreview = lazy(() => import("./pages/CardPreview"));
+const Gallery = lazy(() => import("./pages/Gallery"));
+const GalleryManage = lazy(() => import("./pages/GalleryManage"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -45,15 +47,23 @@ const App = () => (
               );
             }}
           >
-            <Routes>
-              <Route path="/login/callback" element={<AuthCallback />} />
-              <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
-              <Route path="/create" element={<RequireAuth><CreateCard /></RequireAuth>} />
-              <Route path="/preview" element={<RequireAuth><CardPreview /></RequireAuth>} />
-              <Route path="/gallery" element={<RequireAuth><Gallery /></RequireAuth>} />
-              <Route path="/gallery/manage" element={<RequireAuth><GalleryManage /></RequireAuth>} />
-              <Route path="*" element={<RequireAuth><NotFound /></RequireAuth>} />
-            </Routes>
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center px-4">
+                  <p className="card-font-display text-muted-foreground">Loading...</p>
+                </div>
+              }
+            >
+              <Routes>
+                <Route path="/login/callback" element={<AuthCallback />} />
+                <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+                <Route path="/create" element={<RequireAuth><CreateCard /></RequireAuth>} />
+                <Route path="/preview" element={<RequireAuth><CardPreview /></RequireAuth>} />
+                <Route path="/gallery" element={<RequireAuth><Gallery /></RequireAuth>} />
+                <Route path="/gallery/manage" element={<RequireAuth><GalleryManage /></RequireAuth>} />
+                <Route path="*" element={<RequireAuth><NotFound /></RequireAuth>} />
+              </Routes>
+            </Suspense>
           </Security>
         )}
       </BrowserRouter>
