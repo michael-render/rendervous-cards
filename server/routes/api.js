@@ -120,11 +120,11 @@ router.post('/cards', requireOktaAuth, async (req, res) => {
 
     await fs.writeFile(path.join(cardDir, 'card.png'), imgBuffer);
 
-    const triggered = await triggerThumbnailTask(id);
-    if (!triggered) {
-      // Fallback to local thumbnail generation when workflows are not configured.
-      await writeThumbnail(imgBuffer, cardDir);
-    }
+    // Ensure thumbnail exists immediately for UI responsiveness.
+    await writeThumbnail(imgBuffer, cardDir);
+
+    // Kick off async workflow refresh without blocking save latency.
+    void triggerThumbnailTask(id);
 
     res.status(201).json({ id, created_at });
   } catch (err) {
