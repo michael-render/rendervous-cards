@@ -2,15 +2,28 @@ import { Render } from '@renderinc/sdk';
 
 const STORAGE_PREFIX = (process.env.OBJECT_STORAGE_PREFIX || 'cards').replace(/^\/+|\/+$/g, '');
 const OBJECT_STORAGE_REGION = process.env.OBJECT_STORAGE_REGION || process.env.RENDER_REGION || 'oregon';
-const OBJECT_STORAGE_OWNER_ID = process.env.OBJECT_STORAGE_OWNER_ID || process.env.RENDER_WORKSPACE_ID;
+
+function resolveOwnerId() {
+  return (
+    process.env.OBJECT_STORAGE_OWNER_ID ||
+    process.env.RENDER_WORKSPACE_ID ||
+    process.env.RENDER_SERVICE_OWNER_ID ||
+    process.env.RENDER_OWNER_ID ||
+    ''
+  );
+}
 
 function getObjectClient() {
-  if (!OBJECT_STORAGE_OWNER_ID) {
-    throw new Error('OBJECT_STORAGE_OWNER_ID (or RENDER_WORKSPACE_ID) must be set');
+  const ownerId = resolveOwnerId();
+
+  if (!ownerId) {
+    throw new Error(
+      'Object Storage owner ID missing. Set OBJECT_STORAGE_OWNER_ID or RENDER_WORKSPACE_ID.',
+    );
   }
 
   const render = new Render({
-    ownerId: OBJECT_STORAGE_OWNER_ID,
+    ownerId,
     region: OBJECT_STORAGE_REGION,
   });
 
