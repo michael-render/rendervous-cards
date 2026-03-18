@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
@@ -24,6 +24,7 @@ const CreateCard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const current = QUESTIONS[step];
   const value = answers[current.key] || '';
@@ -59,8 +60,52 @@ const CreateCard = () => {
     if (e.key === 'Enter' && canProceed) handleNext();
   };
 
+  useEffect(() => {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    if (!isMobile) return;
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateKeyboardOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(offset > 0 ? offset + 12 : 0);
+    };
+
+    viewport.addEventListener('resize', updateKeyboardOffset);
+    viewport.addEventListener('scroll', updateKeyboardOffset);
+    updateKeyboardOffset();
+
+    return () => {
+      viewport.removeEventListener('resize', updateKeyboardOffset);
+      viewport.removeEventListener('scroll', updateKeyboardOffset);
+    };
+  }, []);
+
+  useEffect(() => {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    if (!isMobile) return;
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
+
+      window.setTimeout(() => {
+        target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+      }, 180);
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    return () => document.removeEventListener('focusin', handleFocusIn);
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" onKeyDown={handleKeyDown}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
+      onKeyDown={handleKeyDown}
+      style={{ paddingBottom: keyboardOffset > 0 ? `${keyboardOffset}px` : undefined }}
+    >
       <GalleryLink />
       {/* Background gradient fields */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
