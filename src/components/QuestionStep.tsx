@@ -2,6 +2,9 @@ import { motion } from 'framer-motion';
 import { Camera } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
+const MAX_UPLOAD_DIMENSION = 1200;
+const OUTPUT_QUALITY = 0.9;
+
 interface QuestionStepProps {
   question: string;
   placeholder: string;
@@ -14,6 +17,49 @@ interface QuestionStepProps {
   isPhotoUpload?: boolean;
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (result) resolve(result);
+      else reject(new Error('Unable to encode image'));
+    };
+    reader.onerror = () => reject(new Error('Unable to encode image'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function normalizeUploadImage(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const { width, height } = bitmap;
+  const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(width, height));
+  const outputWidth = Math.max(1, Math.round(width * scale));
+  const outputHeight = Math.max(1, Math.round(height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    bitmap.close();
+    throw new Error('Unable to process uploaded image');
+  }
+
+  context.drawImage(bitmap, 0, 0, outputWidth, outputHeight);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', OUTPUT_QUALITY),
+  );
+  if (!blob) {
+    throw new Error('Unable to process uploaded image');
+  }
+
+  return blobToDataUrl(blob);
+}
+
 const QuestionStep = ({ question, placeholder, value, onChange, step, total, isTextarea, subtitle, isPhotoUpload }: QuestionStepProps) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadTriggerRef = useRef<HTMLButtonElement>(null);
@@ -24,15 +70,16 @@ const QuestionStep = ({ question, placeholder, value, onChange, step, total, isT
     }
   }, [isPhotoUpload, step]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = typeof reader.result === 'string' ? reader.result : '';
-        if (result) onChange(result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      const optimized = await normalizeUploadImage(file);
+      onChange(optimized);
+    } catch {
+      const result = await blobToDataUrl(file);
+      onChange(result);
     }
   };
 

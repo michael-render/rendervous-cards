@@ -81,8 +81,12 @@ const CardPreview = () => {
       let dataUrl: string;
       try {
         await waitForImages(cardRef.current);
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        const capturePixelRatio = Math.min(1.5, devicePixelRatio);
         dataUrl = await toPng(cardRef.current, {
-          pixelRatio: 2,
+          pixelRatio: capturePixelRatio,
+          preferredFontFormat: 'woff2',
+          skipFonts: true,
         });
       } catch (error) {
         // Fallback when DOM-to-image fails in some browser/runtime combinations.
