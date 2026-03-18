@@ -143,7 +143,7 @@ const Gallery = () => {
             {cards.map((card) => (
               <article
                 key={card.id}
-                className="rounded-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
+                className="rounded-b-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
                 onClick={() => setSelectedCard(card)}
               >
                 <img
