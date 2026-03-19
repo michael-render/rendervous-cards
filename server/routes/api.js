@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createHash } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import pool from '../db.js';
 import { requireOktaAuth } from '../auth.js';
@@ -97,24 +98,7 @@ router.post('/cards', requireOktaAuth, async (req, res) => {
     // Strip photoUrl from answers to avoid storing large base64 in DB
     const { photoUrl, ...answersWithoutPhoto } = answers;
 
-    const result = await pool.query(
-      `INSERT INTO cards (name, archetype_title, special_ability, side_quest, signature_move, power_source, inventory_items, theme, answers)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, created_at`,
-      [
-        card.name,
-        card.archetypeTitle,
-        card.specialAbility,
-        card.sideQuest,
-        card.signatureMove,
-        card.powerSource,
-        JSON.stringify(card.inventoryItems),
-        card.theme,
-        JSON.stringify(answersWithoutPhoto),
-      ]
-    );
-
-    const { id, created_at } = result.rows[0];
+    const id = randomUUID();
 
     // Decode base64 image and save full + thumbnail
     const base64Data = image.replace(/^data:image\/[^;]+;base64,/, '');
@@ -125,6 +109,32 @@ router.post('/cards', requireOktaAuth, async (req, res) => {
     // Ensure thumbnail exists immediately for UI responsiveness.
     const thumbBuffer = await buildThumbnailBuffer(imgBuffer);
     await writeCardThumbnail(id, thumbBuffer);
+
+    let created_at;
+    try {
+      const result = await pool.query(
+        `INSERT INTO cards (id, name, archetype_title, special_ability, side_quest, signature_move, power_source, inventory_items, theme, answers)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING created_at`,
+        [
+          id,
+          card.name,
+          card.archetypeTitle,
+          card.specialAbility,
+          card.sideQuest,
+          card.signatureMove,
+          card.powerSource,
+          JSON.stringify(card.inventoryItems),
+          card.theme,
+          JSON.stringify(answersWithoutPhoto),
+        ]
+      );
+      created_at = result.rows[0].created_at;
+    } catch (dbErr) {
+      // Prevent orphaned storage objects if DB insert fails.
+      await deleteCardAssets(id).catch(() => {});
+      throw dbErr;
+    }
 
     // Kick off async workflow refresh without blocking save latency.
     void triggerThumbnailTask(id);
