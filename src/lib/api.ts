@@ -16,6 +16,8 @@ export interface CardSummary {
   created_at: string;
 }
 
+const cardsListCache = new Map<string, { etag: string; data: CardSummary[] }>();
+
 async function getAuthHeaders(): Promise<Record<string, string>> {
   if (!oktaAuth) {
     throw new Error('Okta is not configured in the frontend');
@@ -71,12 +73,34 @@ export async function saveCard(
 }
 
 export async function listCards(limit = 100, offset = 0): Promise<CardSummary[]> {
-  const res = await authedFetch(`${API_URL}/api/cards?limit=${limit}&offset=${offset}`);
+  const cacheKey = `${limit}:${offset}`;
+  const cached = cardsListCache.get(cacheKey);
+
+  const headers: HeadersInit = {};
+  if (cached?.etag) {
+    headers['If-None-Match'] = cached.etag;
+  }
+
+  const res = await authedFetch(`${API_URL}/api/cards?limit=${limit}&offset=${offset}`, { headers });
+
+  if (res.status === 304) {
+    return cached?.data ?? [];
+  }
+
   if (!res.ok) {
     const details = await res.text().catch(() => '');
     throw new Error(`Failed to fetch cards (${res.status}): ${details}`);
   }
-  return res.json();
+
+  const data = (await res.json()) as CardSummary[];
+  const etag = res.headers.get('etag');
+  if (etag) {
+    cardsListCache.set(cacheKey, { etag, data });
+  } else {
+    cardsListCache.delete(cacheKey);
+  }
+
+  return data;
 }
 
 export function getCardThumbnailUrl(cardId: string): string {

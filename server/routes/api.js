@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import pool from '../db.js';
 import { requireOktaAuth } from '../auth.js';
@@ -146,7 +147,18 @@ router.get('/cards', requireOktaAuth, async (req, res) => {
        FROM cards ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
-    res.json(result.rows);
+    const payload = JSON.stringify(result.rows);
+    const etag = `"${createHash('sha1').update(payload).digest('base64url')}"`;
+
+    res.set('ETag', etag);
+    res.set('Cache-Control', 'private, must-revalidate');
+    res.set('Vary', 'Authorization');
+
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end();
+    }
+
+    res.type('application/json').send(payload);
   } catch (err) {
     console.error('GET /cards error:', err);
     res.status(500).json({ error: 'Failed to fetch cards' });
