@@ -10,7 +10,7 @@ import AuthedCardImage from '@/components/AuthedCardImage';
 
 const Gallery = () => {
   const navigate = useNavigate();
-  const { data: cards = [], isError, error } = useQuery({
+  const { data: cards = [], isError, error, isFetched } = useQuery({
     queryKey: ['cards'],
     queryFn: () => listCards(100, 0),
     initialData: [],
@@ -99,7 +99,7 @@ const Gallery = () => {
           </motion.div>
         )}
 
-        {!isError && cards.length === 0 && (
+        {isFetched && !isError && cards.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
