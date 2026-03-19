@@ -16,7 +16,7 @@ const GalleryLink = () => {
           backdropFilter: 'blur(4px)',
         }}
       >
-        Gallery
+        Renderverse
       </Link>
     </div>
   );

@@ -66,7 +66,7 @@ const Gallery = () => {
             <button onClick={() => navigate('/')} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="card-font-display text-3xl font-bold text-foreground">Card Gallery</h1>
+            <h1 className="card-font-display text-3xl font-bold text-foreground">Renderverse</h1>
           </div>
           <motion.button
             onClick={() => navigate('/create')}
