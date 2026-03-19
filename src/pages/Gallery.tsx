@@ -171,7 +171,7 @@ const Gallery = () => {
             <button
               type="button"
               onClick={() => setSelectedCard(null)}
-              className="absolute right-3 top-3 rounded-md p-1 text-white/80 hover:text-white"
+              className="absolute right-3 top-3 z-20 rounded-md p-2 text-white/90 hover:text-white bg-black/40 hover:bg-black/55"
               aria-label="Close preview"
             >
               <X className="h-5 w-5" />
