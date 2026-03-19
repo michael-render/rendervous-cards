@@ -69,7 +69,6 @@ export async function writeCardImage(cardId, buffer) {
   await client.put({
     key: cardImageKey(cardId),
     data: buffer,
-    contentType: 'image/png',
   });
 }
 
@@ -78,7 +77,6 @@ export async function writeCardThumbnail(cardId, buffer) {
   await client.put({
     key: cardThumbnailKey(cardId),
     data: buffer,
-    contentType: 'image/png',
   });
 }
 
