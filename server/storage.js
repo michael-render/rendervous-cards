@@ -1,6 +1,10 @@
 import { Render } from '@renderinc/sdk';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
 const STORAGE_PREFIX = (process.env.OBJECT_STORAGE_PREFIX || 'cards').replace(/^\/+|\/+$/g, '');
+const DISK_STORAGE_ROOT = process.env.CARD_STORAGE_PATH || '/mnt/data/cards';
+let ensureDiskRootPromise;
 
 function resolveRegion() {
   const candidates = [
@@ -40,9 +44,7 @@ function getObjectClient() {
   const ownerId = resolveOwnerId();
 
   if (!ownerId) {
-    throw new Error(
-      'Object Storage owner ID missing. Set OBJECT_STORAGE_OWNER_ID or RENDER_WORKSPACE_ID.',
-    );
+    return null;
   }
 
   const render = new Render();
@@ -64,57 +66,126 @@ function isNotFoundError(err) {
   return err && typeof err === 'object' && 'statusCode' in err && err.statusCode === 404;
 }
 
-export async function writeCardImage(cardId, buffer) {
+function ensureDiskRoot() {
+  if (!ensureDiskRootPromise) {
+    ensureDiskRootPromise = mkdir(DISK_STORAGE_ROOT, { recursive: true });
+  }
+  return ensureDiskRootPromise;
+}
+
+function cardDirectory(cardId) {
+  return path.join(DISK_STORAGE_ROOT, cardId);
+}
+
+function diskImagePath(cardId) {
+  return path.join(cardDirectory(cardId), 'card.png');
+}
+
+function diskThumbnailPath(cardId) {
+  return path.join(cardDirectory(cardId), 'thumb.png');
+}
+
+async function writeDiskFile(filePath, buffer) {
+  await ensureDiskRoot();
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, buffer);
+}
+
+async function readDiskFile(filePath) {
+  try {
+    return await readFile(filePath);
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT') {
+      return null;
+    }
+    throw err;
+  }
+}
+
+async function deleteDiskFile(filePath) {
+  try {
+    await rm(filePath, { force: true });
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT') {
+      return;
+    }
+    throw err;
+  }
+}
+
+async function deleteDiskCardDirectory(cardId) {
+  try {
+    await rm(cardDirectory(cardId), { recursive: true, force: true });
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT') {
+      return;
+    }
+    throw err;
+  }
+}
+
+async function readObjectFile(key) {
   const client = getObjectClient();
-  await client.put({
-    key: cardImageKey(cardId),
-    data: buffer,
-  });
+  if (!client) return null;
+  try {
+    const object = await client.get({ key });
+    return object.data;
+  } catch (err) {
+    if (isNotFoundError(err)) return null;
+    throw err;
+  }
+}
+
+async function deleteObjectFile(key) {
+  const client = getObjectClient();
+  if (!client) return;
+  try {
+    await client.delete({ key });
+  } catch (err) {
+    if (!isNotFoundError(err)) {
+      throw err;
+    }
+  }
+}
+
+export async function writeCardImage(cardId, buffer) {
+  await writeDiskFile(diskImagePath(cardId), buffer);
 }
 
 export async function writeCardThumbnail(cardId, buffer) {
-  const client = getObjectClient();
-  await client.put({
-    key: cardThumbnailKey(cardId),
-    data: buffer,
-  });
+  await writeDiskFile(diskThumbnailPath(cardId), buffer);
 }
 
 export async function readCardImage(cardId) {
-  const client = getObjectClient();
-  try {
-    const object = await client.get({ key: cardImageKey(cardId) });
-    return object.data;
-  } catch (err) {
-    if (isNotFoundError(err)) return null;
-    throw err;
+  const diskBuffer = await readDiskFile(diskImagePath(cardId));
+  if (diskBuffer) return diskBuffer;
+
+  const objectBuffer = await readObjectFile(cardImageKey(cardId));
+  if (objectBuffer) {
+    // Best-effort local cache for legacy object-storage cards.
+    await writeDiskFile(diskImagePath(cardId), objectBuffer).catch(() => {});
   }
+  return objectBuffer;
 }
 
 export async function readCardThumbnail(cardId) {
-  const client = getObjectClient();
-  try {
-    const object = await client.get({ key: cardThumbnailKey(cardId) });
-    return object.data;
-  } catch (err) {
-    if (isNotFoundError(err)) return null;
-    throw err;
+  const diskBuffer = await readDiskFile(diskThumbnailPath(cardId));
+  if (diskBuffer) return diskBuffer;
+
+  const objectBuffer = await readObjectFile(cardThumbnailKey(cardId));
+  if (objectBuffer) {
+    // Best-effort local cache for legacy object-storage cards.
+    await writeDiskFile(diskThumbnailPath(cardId), objectBuffer).catch(() => {});
   }
+  return objectBuffer;
 }
 
 export async function deleteCardAssets(cardId) {
-  const client = getObjectClient();
-  const keys = [cardImageKey(cardId), cardThumbnailKey(cardId)];
-
-  await Promise.all(
-    keys.map(async (key) => {
-      try {
-        await client.delete({ key });
-      } catch (err) {
-        if (!isNotFoundError(err)) {
-          throw err;
-        }
-      }
-    }),
-  );
+  await Promise.all([
+    deleteDiskFile(diskImagePath(cardId)),
+    deleteDiskFile(diskThumbnailPath(cardId)),
+    deleteDiskCardDirectory(cardId),
+    deleteObjectFile(cardImageKey(cardId)),
+    deleteObjectFile(cardThumbnailKey(cardId)),
+  ]);
 }
