@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Sparkles, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -10,9 +10,13 @@ import AuthedCardImage from '@/components/AuthedCardImage';
 
 const Gallery = () => {
   const navigate = useNavigate();
-  const { data: cards = [], isLoading, isError, error } = useQuery({
+  const { data: cards = [], isError, error } = useQuery({
     queryKey: ['cards'],
     queryFn: () => listCards(100, 0),
+    initialData: [],
+    placeholderData: (previousData) => previousData ?? [],
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
   const [selectedCard, setSelectedCard] = useState<CardSummary | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -82,16 +86,6 @@ const Gallery = () => {
           </motion.button>
         </div>
 
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
-          >
-            <p className="card-font-display text-xl text-muted-foreground">Loading cards...</p>
-          </motion.div>
-        )}
-
         {isError && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -105,7 +99,7 @@ const Gallery = () => {
           </motion.div>
         )}
 
-        {!isLoading && !isError && cards.length === 0 && (
+        {!isError && cards.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -130,31 +124,37 @@ const Gallery = () => {
           </motion.div>
         )}
 
-        {!isLoading && !isError && cards.length > 0 && (
+        {!isError && cards.length > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            layout
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
-            {cards.map((card) => (
-              <article
-                key={card.id}
-                className="rounded-b-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
-                onClick={() => setSelectedCard(card)}
-              >
-                <AuthedCardImage
-                  cardId={card.id}
-                  variant="thumbnail"
-                  alt={`${card.name} card`}
-                  className="w-full aspect-[4/5] object-cover"
-                  loading="lazy"
-                />
-                <div className="p-4">
-                  <h2 className="card-font-display text-lg text-foreground leading-tight">{card.name}</h2>
-                  <p className="card-font-body text-sm text-muted-foreground mt-1">{card.archetype_title}</p>
-                </div>
-              </article>
-            ))}
+            <AnimatePresence initial={false}>
+              {cards.map((card) => (
+                <motion.article
+                  key={card.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -8 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="rounded-b-xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-sm cursor-pointer"
+                  onClick={() => setSelectedCard(card)}
+                >
+                  <AuthedCardImage
+                    cardId={card.id}
+                    variant="thumbnail"
+                    alt={`${card.name} card`}
+                    className="w-full aspect-[4/5] object-cover"
+                    loading="lazy"
+                  />
+                  <div className="p-4">
+                    <h2 className="card-font-display text-lg text-foreground leading-tight">{card.name}</h2>
+                    <p className="card-font-body text-sm text-muted-foreground mt-1">{card.archetype_title}</p>
+                  </div>
+                </motion.article>
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
       </div>
