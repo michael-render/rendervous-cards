@@ -1,7 +1,30 @@
 import { Render } from '@renderinc/sdk';
 
 const STORAGE_PREFIX = (process.env.OBJECT_STORAGE_PREFIX || 'cards').replace(/^\/+|\/+$/g, '');
-const OBJECT_STORAGE_REGION = process.env.OBJECT_STORAGE_REGION || process.env.RENDER_REGION || 'oregon';
+
+function resolveRegion() {
+  const candidates = [
+    process.env.OBJECT_STORAGE_REGION,
+    process.env.RENDER_REGION,
+    'oregon',
+  ];
+
+  for (const candidate of candidates) {
+    const region = (candidate || '').trim().toLowerCase();
+    if (!region) continue;
+
+    // Ignore unresolved template placeholders like "{region}" / "%7Bregion%7D".
+    if (region.includes('{') || region.includes('}') || region.includes('%7b') || region.includes('%7d')) {
+      continue;
+    }
+
+    return region;
+  }
+
+  return 'oregon';
+}
+
+const OBJECT_STORAGE_REGION = resolveRegion();
 
 function resolveOwnerId() {
   return (
@@ -22,12 +45,11 @@ function getObjectClient() {
     );
   }
 
-  const render = new Render({
+  const render = new Render();
+  return render.experimental.storage.objects.scoped({
     ownerId,
     region: OBJECT_STORAGE_REGION,
   });
-
-  return render.experimental.storage.objects;
 }
 
 function cardImageKey(cardId) {
