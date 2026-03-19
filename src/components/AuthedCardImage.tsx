@@ -53,7 +53,10 @@ const AuthedCardImage = ({ cardId, variant, alt, className, ...rest }: AuthedCar
         setStatus('loaded');
       })
       .catch((err) => {
-        console.error(`Failed to load ${variant} for card ${cardId}:`, err);
+        const message = err instanceof Error ? err.message : String(err);
+        if (!message.includes('(404)')) {
+          console.error(`Failed to load ${variant} for card ${cardId}:`, err);
+        }
         if (active) setStatus('error');
       });
 

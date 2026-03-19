@@ -113,7 +113,13 @@ export function getCardImageUrl(cardId: string): string {
 
 export async function fetchCardAssetBlob(cardId: string, variant: 'thumbnail' | 'image'): Promise<Blob> {
   const path = variant === 'thumbnail' ? getCardThumbnailUrl(cardId) : getCardImageUrl(cardId);
-  const res = await authedFetch(path);
+  let res = await authedFetch(path);
+
+  // Some older cards may not have thumbnails; try full image before failing.
+  if (!res.ok && res.status === 404 && variant === 'thumbnail') {
+    res = await authedFetch(getCardImageUrl(cardId));
+  }
+
   if (!res.ok) {
     throw new Error(`Failed to fetch ${variant} (${res.status})`);
   }
