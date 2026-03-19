@@ -1,20 +1,24 @@
 import { Router } from 'express';
-import path from 'path';
-import fs from 'fs/promises';
 import sharp from 'sharp';
 import pool from '../db.js';
 import { requireOktaAuth } from '../auth.js';
+import {
+  deleteCardAssets,
+  readCardImage,
+  readCardThumbnail,
+  writeCardImage,
+  writeCardThumbnail,
+} from '../storage.js';
 
 const router = Router();
-const STORAGE = process.env.CARD_STORAGE_PATH || './card-storage';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TASKS_BASE_URL = process.env.RENDER_TASKS_URL || 'https://api.render.com';
 
-async function writeThumbnail(imgBuffer, cardDir) {
-  await sharp(imgBuffer)
+async function buildThumbnailBuffer(imgBuffer) {
+  return sharp(imgBuffer)
     .resize(300)
     .png({ quality: 80 })
-    .toFile(path.join(cardDir, 'thumb.png'));
+    .toBuffer();
 }
 
 async function triggerThumbnailTask(cardId) {
@@ -115,13 +119,11 @@ router.post('/cards', requireOktaAuth, async (req, res) => {
     const base64Data = image.replace(/^data:image\/[^;]+;base64,/, '');
     const imgBuffer = Buffer.from(base64Data, 'base64');
 
-    const cardDir = path.join(STORAGE, id);
-    await fs.mkdir(cardDir, { recursive: true });
-
-    await fs.writeFile(path.join(cardDir, 'card.png'), imgBuffer);
+    await writeCardImage(id, imgBuffer);
 
     // Ensure thumbnail exists immediately for UI responsiveness.
-    await writeThumbnail(imgBuffer, cardDir);
+    const thumbBuffer = await buildThumbnailBuffer(imgBuffer);
+    await writeCardThumbnail(id, thumbBuffer);
 
     // Kick off async workflow refresh without blocking save latency.
     void triggerThumbnailTask(id);
@@ -162,9 +164,7 @@ router.post('/cards/:id/thumbnail', validateId, requireAdmin, async (req, res) =
     const base64Data = image.replace(/^data:image\/[^;]+;base64,/, '');
     const imgBuffer = Buffer.from(base64Data, 'base64');
 
-    const cardDir = path.join(STORAGE, req.params.id);
-    await fs.mkdir(cardDir, { recursive: true });
-    await fs.writeFile(path.join(cardDir, 'thumb.png'), imgBuffer);
+    await writeCardThumbnail(req.params.id, imgBuffer);
 
     res.json({ updated: true });
   } catch (err) {
@@ -193,10 +193,12 @@ router.get('/cards/:id', validateId, requireOktaAuth, async (req, res) => {
 // Serve full card image
 router.get('/cards/:id/image', validateId, requireOktaAuth, async (req, res) => {
   try {
-    const filePath = path.join(STORAGE, req.params.id, 'card.png');
-    await fs.access(filePath);
     res.set('Cache-Control', 'public, max-age=86400');
-    res.type('image/png').sendFile(path.resolve(filePath));
+    const imageBuffer = await readCardImage(req.params.id);
+    if (!imageBuffer) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    res.type('image/png').send(imageBuffer);
   } catch {
     res.status(404).json({ error: 'Image not found' });
   }
@@ -205,18 +207,16 @@ router.get('/cards/:id/image', validateId, requireOktaAuth, async (req, res) => 
 // Serve thumbnail (fallback to full image)
 router.get('/cards/:id/thumbnail', validateId, requireOktaAuth, async (req, res) => {
   try {
-    const thumbPath = path.join(STORAGE, req.params.id, 'thumb.png');
-    const fullPath = path.join(STORAGE, req.params.id, 'card.png');
-
     res.set('Cache-Control', 'public, max-age=86400');
-
-    try {
-      await fs.access(thumbPath);
-      return res.type('image/png').sendFile(path.resolve(thumbPath));
-    } catch {
-      await fs.access(fullPath);
-      return res.type('image/png').sendFile(path.resolve(fullPath));
+    const thumbBuffer = await readCardThumbnail(req.params.id);
+    if (thumbBuffer) {
+      return res.type('image/png').send(thumbBuffer);
     }
+    const imageBuffer = await readCardImage(req.params.id);
+    if (imageBuffer) {
+      return res.type('image/png').send(imageBuffer);
+    }
+    res.status(404).json({ error: 'Image not found' });
   } catch {
     res.status(404).json({ error: 'Image not found' });
   }
@@ -233,9 +233,7 @@ router.delete('/cards/:id', validateId, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Card not found' });
     }
 
-    // Remove image files
-    const cardDir = path.join(STORAGE, req.params.id);
-    await fs.rm(cardDir, { recursive: true, force: true });
+    await deleteCardAssets(req.params.id);
 
     res.json({ deleted: true });
   } catch (err) {
