@@ -233,9 +233,15 @@ router.delete('/cards/:id', validateId, requireAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Card not found' });
     }
 
-    await deleteCardAssets(req.params.id);
+    let assetsDeleted = true;
+    try {
+      await deleteCardAssets(req.params.id);
+    } catch (assetErr) {
+      assetsDeleted = false;
+      console.warn(`Card ${req.params.id} deleted from DB, but asset cleanup failed:`, assetErr);
+    }
 
-    res.json({ deleted: true });
+    res.json({ deleted: true, assetsDeleted });
   } catch (err) {
     console.error('DELETE /cards/:id error:', err);
     res.status(500).json({ error: 'Failed to delete card' });
