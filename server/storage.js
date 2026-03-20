@@ -136,6 +136,14 @@ async function readObjectFile(key) {
   }
 }
 
+async function writeObjectFile(key, buffer) {
+  const client = getObjectClient();
+  if (!client) {
+    throw new Error('Object Storage fallback is unavailable (missing owner ID configuration).');
+  }
+  await client.put({ key, data: buffer });
+}
+
 async function deleteObjectFile(key) {
   const client = getObjectClient();
   if (!client) return;
@@ -149,11 +157,24 @@ async function deleteObjectFile(key) {
 }
 
 export async function writeCardImage(cardId, buffer) {
-  await writeDiskFile(diskImagePath(cardId), buffer);
+  try {
+    await writeDiskFile(diskImagePath(cardId), buffer);
+  } catch (diskErr) {
+    console.warn(`Disk write failed for card image ${cardId}; falling back to Object Storage:`, diskErr);
+    await writeObjectFile(cardImageKey(cardId), buffer);
+  }
 }
 
 export async function writeCardThumbnail(cardId, buffer) {
-  await writeDiskFile(diskThumbnailPath(cardId), buffer);
+  try {
+    await writeDiskFile(diskThumbnailPath(cardId), buffer);
+  } catch (diskErr) {
+    console.warn(
+      `Disk write failed for card thumbnail ${cardId}; falling back to Object Storage:`,
+      diskErr,
+    );
+    await writeObjectFile(cardThumbnailKey(cardId), buffer);
+  }
 }
 
 export async function readCardImage(cardId) {
